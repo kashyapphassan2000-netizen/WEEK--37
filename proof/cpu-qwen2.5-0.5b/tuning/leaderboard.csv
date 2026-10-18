@@ -1,0 +1,5 @@
+trial,minutes,quant.fold_scales,quant.group_size,search.propagate,tune_ppl
+2,20.36,,64,,13.19804
+3,20.12,,64,quantized,13.21944
+1,18.98,never,,,13.82911
+0,18.37,,,,13.84401

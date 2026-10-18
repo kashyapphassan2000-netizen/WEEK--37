@@ -164,12 +164,31 @@ per dataset (CPU budget) · {qc['n_linears_quantized']} Linear layers quantized,
             lines = [x for x in tl.read_text().splitlines() if "stage winner" in x or "best overrides" in x
                      or "stage kept" in x]
             s.append("<pre>" + esc("\n".join(lines)) + "</pre>")
-        fin = PROOF / "final_results.json"
-        if fin.exists():
-            fr = json.loads(fin.read_text())
-            s.append(f"<p><b>Final run with the tuned config</b> (re-quantized, evaluated once on the TEST windows): "
-                     f"WikiText-2 {fr.get('awq_ppl_wikitext2', 0):.3f}, C4 {fr.get('awq_ppl_c4', 0):.3f}. "
-                     f"See <code>proof/cpu-qwen2.5-0.5b/final_results.json</code>.</p>")
+    t = PROOF / "tuned-g64"
+    if (t / "results.json").exists():
+        fr = json.loads((t / "results.json").read_text())
+        rg = json.loads((t / "rtn_g64.json").read_text())
+        tv = json.loads((t / "verify.json").read_text())
+        s.append("<h2>19.8 Final run with the tuned config (group 64), evaluated ONCE on the test windows</h2>"
+                 "<table><tr><th>Dataset</th><th>Original</th><th>RTN g128</th><th>AWQ g128</th><th>RTN g64</th>"
+                 "<th><b>AWQ g64 (tuned)</b></th><th>AWQ g64 gap</th></tr>")
+        for d in ("wikitext2", "c4"):
+            fp = base[f"fp16_ppl_{d}"]
+            s.append(f"<tr><td>{d}</td><td>{fp:.3f}</td><td>{base[f'rtn_ppl_{d}']:.3f}</td>"
+                     f"<td>{res[f'awq_ppl_{d}']:.3f}</td><td>{rg[f'rtn_ppl_{d}']:.3f}</td>"
+                     f"<td><b>{fr[f'awq_ppl_{d}']:.3f}</b></td><td>+{100 * (fr[f'awq_ppl_{d}'] - fp) / fp:.1f}%</td></tr>")
+        s.append("</table>")
+        le = fr.get("awq_lm_eval", {})
+        s.append(f"<p>Tuned model: next-token agreement {tv.get('top1_agreement', 0):.3f} (was "
+                 f"{ver.get('top1_agreement', 0):.3f}), weights {tv.get('awq_disk_gb')} GB, lm-eval "
+                 + ", ".join(f"{k} acc {v.get('acc', 0):.3f}" for k, v in le.items())
+                 + ". Gates: " + ", ".join(f"{k.replace('of FP16', 'of original')}: {'PASS' if v else 'FAIL'}"
+                                            for k, v in fr.get("gates", {}).items()) + ".</p>")
+        s.append("<div class='box truth'><b class='tag'>BRUTAL TRUTH</b> Most of the tuning gain came from the smaller "
+                 "group size, which helps plain RTN too (RTN g64 is already 14.48). At equal group size, AWQ removes a "
+                 "further ~24–27% of the remaining gap. The 0.5B model still misses the strict ≤10% gate by 0.4–0.7 "
+                 "percentage points. The vLLM-format export of this model passed its layout check (worst rel. diff 3.3e-4, "
+                 "fp16 scale rounding) and the model card was generated with <code>08_publish.py --dry-run</code>.</div>")
     return "\n".join(s)
 
 

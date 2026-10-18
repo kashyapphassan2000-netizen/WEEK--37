@@ -1,0 +1,39 @@
+============================= test session starts ==============================
+platform linux -- Python 3.13.16, pytest-9.1.1, pluggy-1.7.0 -- /home/user/WEEK--37/.venv/bin/python
+cachedir: .pytest_cache
+rootdir: /home/user/WEEK--37
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.15.1
+collecting ... collected 30 items
+tests/test_config.py::test_overrides_are_typed PASSED                    [  3%]
+tests/test_config.py::test_bad_values_fail_fast[quant.w_bit=3] PASSED    [  6%]
+tests/test_config.py::test_bad_values_fail_fast[quant.group_size=100] PASSED [ 10%]
+tests/test_config.py::test_bad_values_fail_fast[search.propagate=maybe] PASSED [ 13%]
+tests/test_config.py::test_bad_values_fail_fast[dtype=float16] PASSED    [ 16%]
+tests/test_config.py::test_unknown_key_rejected PASSED                   [ 20%]
+tests/test_export.py::test_gemm_pack_roundtrip PASSED                    [ 23%]
+tests/test_export.py::test_gemm_known_layout PASSED                      [ 26%]
+tests/test_export.py::test_to_gemm_dequant_matches_native PASSED         [ 30%]
+tests/test_export.py::test_export_folder PASSED                          [ 33%]
+tests/test_export.py::test_export_refuses_unfolded PASSED                [ 36%]
+tests/test_hardware.py::test_llama_8b_numbers_match_playbook PASSED      [ 40%]
+tests/test_moe.py::test_mixtral_experts_quantized PASSED                 [ 43%]
+tests/test_pipeline.py::test_end_to_end_llama_folded PASSED              [ 46%]
+tests/test_pipeline.py::test_awq_beats_rtn_end_to_end PASSED             [ 50%]
+tests/test_pipeline.py::test_never_fold_keeps_inv_s PASSED               [ 53%]
+tests/test_pipeline.py::test_gqa_tied_qwen PASSED                        [ 56%]
+tests/test_pipeline.py::test_resume_gives_identical_result PASSED        [ 60%]
+tests/test_plugin.py::test_custom_model_via_plugin PASSED                [ 63%]
+tests/test_quantizer.py::test_pack_unpack_roundtrip_is_exact PASSED      [ 66%]
+tests/test_quantizer.py::test_error_is_bounded_by_half_a_step PASSED     [ 70%]
+tests/test_quantizer.py::test_per_channel_group PASSED                   [ 73%]
+tests/test_quantizer.py::test_awq_linear_matches_fake_quant PASSED       [ 76%]
+tests/test_quantizer.py::test_awq_linear_with_inv_s_undoes_the_scale PASSED [ 80%]
+tests/test_scaling.py::test_scaling_identity_exact PASSED                [ 83%]
+tests/test_scaling.py::test_folding_keeps_block_output_identical PASSED  [ 86%]
+tests/test_scaling.py::test_gemma_style_norm_offset_fold PASSED          [ 90%]
+tests/test_search.py::test_awq_beats_rtn_on_salient_channels PASSED      [ 93%]
+tests/test_search.py::test_search_never_worse_than_rtn PASSED            [ 96%]
+tests/test_search.py::test_clip_search_does_not_increase_error PASSED    [100%]
+============================= 30 passed in 13.35s ==============================

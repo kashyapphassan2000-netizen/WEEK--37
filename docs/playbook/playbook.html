@@ -61,7 +61,7 @@
   </div>
   <div style="margin-top:22px">
     <table class="meta">
-      <tr><td>What this is</td><td>The end-to-end operating manual + the build plan for the code that goes into <code>github.com/kashyapphassan2000-netizen/WEEK--37</code>. It covers the whole flow: pick a model, size the hardware (AI-assisted or by formula), get tokens, rent the GPU, connect (SSH / VS Code / WinSCP), install the stack, run AWQ, evaluate, tune, export and hand back the model.</td></tr>
+      <tr><td>What this is</td><td>The end-to-end operating manual and code tour for <code>github.com/kashyapphassan2000-netizen/WEEK--37</code>. It covers the whole flow: pick a model, size the hardware (AI-assisted or by formula), get tokens, rent the GPU, connect (SSH / VS Code / WinSCP), install the stack, run AWQ, evaluate, tune, export and hand back the model.</td></tr>
       <tr><td>Built on</td><td>Your <i>AWQ From Scratch — Week 37 Build Guide</i> (40 pp). I kept its algorithm and day-by-day spirit, fixed the bugs I found in it (Section 2) and rebuilt the pipeline so it works on any size of model, not just models that fit on one GPU.</td></tr>
       <tr><td>Status</td><td><b>Built.</b> The code is in the repo, 30 unit and integration tests pass, and the full pipeline (gates 00–05 plus tuning) ran end to end on a real model (Qwen2.5-0.5B, CPU). The measured numbers are in Section 19. Every file is explained in Section 18 and printed in full in the Appendix.</td></tr>
       <tr><td>Date</td><td>18 October 2026. GPU prices were checked this month (RunPod page dated 8 Oct 2026) and they change every month, so re-check before you rent.</td></tr>
@@ -604,6 +604,7 @@ bash scripts/run_all.sh configs/run.yaml 2>&1 | tee run.log</pre>
 <li>Stop when the gate in 11.2 is met, or after 3 trials in a row that improve less than 0.5%.</li>
 <li>Run the final eval (11.1) <b>once</b> on the winner.</li>
 </ol>
+<div class="box note"><b class="tag">REAL RUN</b> Section 19.7–19.8 shows this protocol on Qwen2.5-0.5B: group 64 was accepted (validation PPL −4.7%), <code>fold_scales=never</code> (−0.1%) and quantized propagation were rejected, and the final test-set gap went from +16.0% to +10.7%.</div>
 <pre class="cmd">python scripts/06_tune.py --config configs/run.yaml --space configs/tune_space.yaml --budget-hours 3
 <span class="c"># writes tuning/leaderboard.csv  and  configs/run.best.yaml</span></pre>
 

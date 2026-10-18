@@ -16,6 +16,15 @@ A from-scratch, pure-PyTorch implementation of **AWQ** (Activation-aware Weight 
 | Export to standard AWQ GEMM (vLLM / SGLang) | Implemented. Layout verified against a reference unpacker. **Not yet loaded in vLLM here (no GPU)** |
 | Fast inference | **No.** The `AwqLinear` runtime dequantizes in Python (correct, slow). Fast = export → vLLM |
 
+## Measured (CPU proof run, Qwen2.5-0.5B, first 20×2048 test tokens per dataset)
+
+| | Original (FP32) | RTN g128 | AWQ g128 | RTN g64 | **AWQ g64 (tuned)** |
+|---|---|---|---|---|---|
+| WikiText-2 PPL | 12.701 | 15.081 | 14.733 | 14.481 | **14.057** (+10.7%) |
+| C4 PPL | 19.156 | 22.987 | 21.999 | 21.894 | **21.149** (+10.4%) |
+
+AWQ beats RTN at every setting, and tuning (group 64, chosen on the *validation* split) brought the gap from +16% to +10.7%. A 0.5B model still **fails** the strict ≤10% gate; the details and every raw file are in [`proof/cpu-qwen2.5-0.5b/`](proof/cpu-qwen2.5-0.5b/README.md).
+
 ## Quick start
 
 ```bash

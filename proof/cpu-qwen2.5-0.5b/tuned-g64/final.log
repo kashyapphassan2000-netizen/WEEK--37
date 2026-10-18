@@ -1,0 +1,82 @@
+[     0.0s] [quantize] config: {'model': 'Qwen/Qwen2.5-0.5B', 'revision': 'main', 'trust_remote_code': False, 'dtype': 'float32', 'device': 'cpu', 'plugin': None, 'seed': 42, 'quant': {'w_bit': 4, 'group_size': 64, 'zero_point': True, 'skip_modules': [], 'fold_scales': 'auto', 'quantize_experts': True}, 'search': {'n_grid': 20, 'duo_scaling': True, 'max_search_tokens': 8192, 'clip': True, 'clip_grid': 20, 'max_shrink': 0.5, 'clip_tokens': 512, 'propagate': 'fp'}, 'calib': {'dataset': 'pileval', 'n_samples': 64, 'seq_len': 512, 'batch_size': 8}, 'eval': {'ppl_datasets': ['wikitext2', 'c4'], 'ppl_seq_len': 2048, 'max_windows': 20, 'lm_eval_tasks': ['arc_easy', 'piqa'], 'lm_eval_limit': 300, 'lm_eval_batch_size': '8', 'gen_max_new_tokens': 48, 'custom_jsonl': None, 'tune_dataset': 'wikitext2_val', 'tune_max_windows': 20}, 'io': {'work_dir': 'runs/qwen2.5-0.5b-cpu-best'}}
+
+[     6.2s] [quantize] model files: /tmp/claude-0/-home-user-WEEK--37/00117478-584b-5be6-a9e2-bc6c09f40426/scratchpad/hf/hub/models--Qwen--Qwen2.5-0.5B/snapshots/060db6499f32faf8b98477b0a26969ef7d8b9987
+[     6.5s] [model_io] mode=stream  blocks=model.layers x24  fp8_ckpt=False
+[     7.1s] [quantize] family=qwen2 blocks=24 fold_scales=auto (fold-capable family: True)
+Repo card metadata block was not found. Setting CardData to empty.
+[    10.5s] [quantize] calibration: pileval (64, 512) tokens
+[    10.6s] [quantize] block-0 inputs (64, 512, 896) torch.float32
+[    53.9s] [quantize] block 1/24  rel_mse=9.26e-03  alphas=[0.3, 0.2, 0.2]  experts=0  43.3s
+[    97.0s] [quantize] block 2/24  rel_mse=5.42e-03  alphas=[0.3, 0.25, 0.3]  experts=0  43.1s
+[   138.7s] [quantize] block 3/24  rel_mse=2.28e-03  alphas=[0.3, 0.25, 0.75]  experts=0  41.7s
+[   177.7s] [quantize] block 4/24  rel_mse=3.06e-04  alphas=[0.25, 0.25, 0.6]  experts=0  39.0s
+[   219.0s] [quantize] block 5/24  rel_mse=1.66e-04  alphas=[0.3, 0.25, 0.45]  experts=0  41.3s
+[   261.4s] [quantize] block 6/24  rel_mse=1.49e-04  alphas=[0.25, 0.25, 0.35]  experts=0  42.3s
+[   297.3s] [quantize] block 7/24  rel_mse=1.51e-04  alphas=[0.35, 0.25, 0.35]  experts=0  36.0s
+[   339.3s] [quantize] block 8/24  rel_mse=1.78e-04  alphas=[0.35, 0.25, 0.25]  experts=0  42.0s
+[   378.9s] [quantize] block 9/24  rel_mse=1.73e-04  alphas=[0.4, 0.25, 0.25]  experts=0  39.6s
+[   414.1s] [quantize] block 10/24  rel_mse=1.96e-04  alphas=[0.35, 0.3, 0.25]  experts=0  35.2s
+[   449.9s] [quantize] block 11/24  rel_mse=1.40e-04  alphas=[0.3, 0.3, 0.25]  experts=0  35.8s
+[   484.0s] [quantize] block 12/24  rel_mse=2.03e-04  alphas=[0.35, 0.35, 0.15]  experts=0  34.1s
+[   522.4s] [quantize] block 13/24  rel_mse=1.38e-04  alphas=[0.25, 0.3, 0.25]  experts=0  38.3s
+[   557.0s] [quantize] block 14/24  rel_mse=1.72e-04  alphas=[0.35, 0.35, 0.3]  experts=0  34.6s
+[   594.0s] [quantize] block 15/24  rel_mse=2.68e-04  alphas=[0.25, 0.35, 0.2]  experts=0  37.0s
+[   632.2s] [quantize] block 16/24  rel_mse=2.55e-04  alphas=[0.3, 0.35, 0.35]  experts=0  38.2s
+[   671.3s] [quantize] block 17/24  rel_mse=7.73e-04  alphas=[0.3, 0.3, 0.3]  experts=0  39.1s
+[   707.1s] [quantize] block 18/24  rel_mse=4.72e-04  alphas=[0.3, 0.3, 0.3]  experts=0  35.8s
+[   743.6s] [quantize] block 19/24  rel_mse=4.47e-04  alphas=[0.35, 0.3, 0.35]  experts=0  36.5s
+[   779.3s] [quantize] block 20/24  rel_mse=6.81e-04  alphas=[0.3, 0.35, 0.2]  experts=0  35.7s
+[   814.1s] [quantize] block 21/24  rel_mse=1.22e-03  alphas=[0.4, 0.35, 0.3]  experts=0  34.8s
+[   852.6s] [quantize] block 22/24  rel_mse=3.85e-03  alphas=[0.35, 0.3, 0.4]  experts=0  38.5s
+[   892.7s] [quantize] block 23/24  rel_mse=2.01e-03  alphas=[0.35, 0.3, 0.25]  experts=0  40.1s
+[   931.4s] [quantize] block 24/24  rel_mse=3.62e-03  alphas=[0.35, 0.3, 0.25]  experts=0  38.8s
+[   934.8s] [quantize] DONE -> runs/qwen2.5-0.5b-cpu-best/quantized  (168 linears, 0 expert tensors, 0 skipped)
+
+[     9.7s] [verify] AWQ weights 0.752 GB in memory, 0.7518 GB on disk
+
+[    37.9s] [verify] logit rel err 0.2361 | top-1 agreement 0.830 | weights 2.629x smaller in memory
+[    37.9s] [verify] PASS  all_layers_finite
+[    37.9s] [verify] PASS  size_matches_formula
+[    37.9s] [verify] PASS  top1_agreement>=0.75
+[    37.9s] [verify] PASS
+[transformers] Token indices sequence length is longer than the specified maximum sequence length for this model (299078 > 131072). Running this sequence through the model will result in indexing errors
+[    55.9s]   [awq wikitext2] 4/20 windows  running ppl=16.1743
+[   102.6s]   [awq wikitext2] 8/20 windows  running ppl=12.8662
+[   145.2s]   [awq wikitext2] 12/20 windows  running ppl=13.6151
+[   188.1s]   [awq wikitext2] 16/20 windows  running ppl=14.0224
+[   231.2s]   [awq wikitext2] 20/20 windows  running ppl=14.0573
+[   231.4s] [eval] awq wikitext2 ppl = 14.0573  (20 windows)
+[   282.4s]   [awq c4] 4/20 windows  running ppl=24.6242
+[   326.0s]   [awq c4] 8/20 windows  running ppl=19.1379
+[   369.6s]   [awq c4] 12/20 windows  running ppl=20.9886
+[   414.0s]   [awq c4] 16/20 windows  running ppl=21.2763
+[   454.5s]   [awq c4] 20/20 windows  running ppl=21.1493
+[   454.6s] [eval] awq c4 ppl = 21.1493  (20 windows)
+[   765.0s] [eval] awq speed {'new_tokens': 64, 'seconds': 39.351, 'tokens_per_s': 1.63}  (reference dequant-per-call kernels; export for fast serving)
+`pretrained` model kwarg is not of type `str`. Many other model arguments may be ignored. Please do not launch via accelerate or use `parallelize=True` if passing an existing model this way.
+Passed an already-initialized model through `pretrained`, assuming single-process call to evaluate() or custom distributed integration
+
+
+
+
+[  1162.7s] [eval] awq lm-eval {'arc_easy': {'sample_len': 300, 'acc': 0.57, 'acc_norm': 0.58}, 'piqa': {'sample_len': 300, 'acc': 0.6833333333333333, 'acc_norm': 0.7033333333333334}}
+[  1162.7s] [eval] ---------------- RESULTS ----------------
+[  1162.7s] [eval] wikitext2  original 12.7007 | RTN 15.0808 | AWQ 14.0573
+[  1162.7s] [eval] c4         original 19.1558 | RTN 22.9873 | AWQ 21.1493
+[  1162.7s] [eval] FAIL  wikitext2: AWQ ppl within 10% of original
+[  1162.7s] [eval] PASS  wikitext2: AWQ ppl < RTN ppl
+[  1162.7s] [eval] FAIL  c4: AWQ ppl within 10% of original
+[  1162.7s] [eval] PASS  c4: AWQ ppl < RTN ppl
+[  1162.7s] [eval] PASS  lm-eval avg drop <= 3.0 points
+[  1162.7s] [eval] PASS  no empty generations
+[  1162.7s] [eval] OVERALL FAIL
+[     0.6s] [export] native -> runs/qwen2.5-0.5b-cpu-best/export/native
+[    10.3s] [export] AutoAWQ-GEMM format -> runs/qwen2.5-0.5b-cpu-best/export/autoawq  (168 quantized linears, 1 shard(s))
+[    10.4s] [export] check model.layers.0.self_attn.q_proj: max rel diff native vs GEMM = 3.34e-04
+[    10.4s] [export] check model.layers.0.self_attn.k_proj: max rel diff native vs GEMM = 2.02e-04
+[    10.4s] [export] check model.layers.0.self_attn.v_proj: max rel diff native vs GEMM = 2.19e-04
+[    10.4s] [export] check model.layers.0.self_attn.o_proj: max rel diff native vs GEMM = 2.17e-04
+[    10.4s] [export] GEMM layout check PASS (worst rel diff 3.34e-04)
+[     0.0s] [publish] model card written: runs/qwen2.5-0.5b-cpu-best/export/autoawq/README.md
+[     0.0s] [publish] dry run — nothing uploaded
+EXIT=0

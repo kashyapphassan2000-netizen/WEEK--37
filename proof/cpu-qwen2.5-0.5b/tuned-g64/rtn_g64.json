@@ -1,0 +1,22 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B",
+  "env": {
+    "time_utc": "2026-10-18T10:36:50+00:00",
+    "git_commit": "77ddce8",
+    "python": "3.13.16",
+    "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+    "cpu_count": 4,
+    "torch": "2.14.1+cpu",
+    "cuda_available": false,
+    "torch_cuda": null,
+    "transformers": "5.20.1",
+    "ram_gb": 16.9
+  },
+  "eval_windows": {
+    "wikitext2": 20,
+    "c4": 20
+  },
+  "ppl_seq_len": 2048,
+  "rtn_ppl_wikitext2": 14.480848300586299,
+  "rtn_ppl_c4": 21.89389658725834
+}

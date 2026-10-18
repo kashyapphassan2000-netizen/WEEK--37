@@ -26,3 +26,4 @@ wandb/
 # editor
 .vscode/settings.json
 .idea/
+docs/playbook/_build.html

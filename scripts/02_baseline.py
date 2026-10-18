@@ -8,6 +8,7 @@ optional lm-eval scores.
 
     python scripts/02_baseline.py --config configs/run.yaml
     python scripts/02_baseline.py --config configs/run.yaml --skip-fp16     # model too big for FP16 eval
+    python scripts/02_baseline.py --config configs/run.yaml --skip-fp16 --set quant.group_size=64 --out rtn_g64.json
 """
 import gc
 import sys
@@ -30,6 +31,7 @@ def main():
     p.add_argument("--skip-rtn", action="store_true")
     p.add_argument("--no-gen", action="store_true", help="skip generations / speed")
     p.add_argument("--no-lm-eval", action="store_true")
+    p.add_argument("--out", default="baseline.json", help="file name inside work_dir (e.g. rtn_g64.json)")
     args = p.parse_args()
     rc = run_config(args)
     log = Logger(rc.work_dir / "baseline.log")
@@ -86,8 +88,8 @@ def main():
         gc.collect()
         if rc.device == "cuda":
             torch.cuda.empty_cache()
-        write_json(rc.work_dir / "baseline.json", out)
-    log(f"[baseline] wrote {rc.work_dir / 'baseline.json'}")
+        write_json(rc.work_dir / args.out, out)
+    log(f"[baseline] wrote {rc.work_dir / args.out}")
 
 
 if __name__ == "__main__":

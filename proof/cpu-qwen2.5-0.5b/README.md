@@ -40,7 +40,27 @@ On CPU the "original" model runs in **FP32**, so every `fp16_*` key in `baseline
 ## History (nothing hidden)
 1. `run.log`: the first `run_all.sh` passed gates 00–03 and **stopped at gate 04**. The size gate compared against a 16-bit formula, but the CPU run stores the unquantized embedding in FP32. That was a bug in the gate, not in the quantization: 0.738 GB measured vs 0.737 GB for the correct FP32 formula.
 2. The gate was fixed (`awq/hardware.py::native_size_gb`); `04_verify.py` was re-run → `verify.log` PASS; then `05_eval.py` → `eval.log`.
-3. Tuning: see `tuning/`.
+3. Tuning (`tuning/`), then a final run with the tuned config (`tuned-g64/`). Details below.
+
+## Tuning (06_tune.py): metric = WikiText-2 *validation* PPL, never the test set
+
+| trial | change | validation PPL | accepted? |
+|---|---|---|---|
+| 0 | base (g128, fold auto, propagate fp) | 13.844 | — |
+| 1 | `quant.fold_scales=never` | 13.829 (−0.1%) | no (< 0.5% bar; would also lose the vLLM export) |
+| 2 | `quant.group_size=64` | **13.198 (−4.7%)** | **yes** |
+| 3 | g64 + `search.propagate=quantized` | 13.219 | no |
+
+## Final run with the tuned config (group 64), evaluated once on the test windows (`tuned-g64/`)
+
+| | Original | RTN g128 | AWQ g128 | RTN g64 | **AWQ g64** |
+|---|---|---|---|---|---|
+| WikiText-2 PPL | 12.701 | 15.081 | 14.733 | 14.481 | **14.057 (+10.7%)** |
+| C4 PPL | 19.156 | 22.987 | 21.999 | 21.894 | **21.149 (+10.4%)** |
+
+- Next-token agreement 0.786 → **0.830**. Weights 0.752 GB (FP32 run). lm-eval: ARC-easy 0.570, PIQA 0.683 (gate PASS).
+- **Brutal truth:** most of the gain came from the smaller group size, which helps plain RTN too. At equal group size, AWQ removes a further ~24% (WikiText-2) / ~27% (C4) of the remaining gap. The 0.5B model still **fails the strict ≤10% gate** by 0.4–0.7 percentage points.
+- Export: `07_export.py --format native,autoawq` → standard AWQ GEMM folder. Layout check PASS (worst rel. diff 3.3e-4 = fp16 rounding of scales). `autoawq_export_config.json` shows the `quantization_config` vLLM reads. `MODEL_CARD.md` was produced by `08_publish.py --dry-run` (nothing uploaded: no HF write token was used).
 
 ## Files
 `env.json` · `model_report.json` (sizing before the run) · `baseline.json` · `search_log.jsonl` (per block: α, AWQ vs RTN loss, block error) · `quant_config.json` · `verify.json` · `results.json` · `generations.md` · logs.

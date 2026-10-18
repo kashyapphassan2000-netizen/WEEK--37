@@ -1,0 +1,14 @@
+[    10.6s] [tune] metric: ppl on wikitext2_val (20 windows) — NOT the test set
+[  1112.7s] [tune] trial 0: (base config) -> ppl 13.84401  (18.37 min)
+[  1113.6s] [tune] stage 'scale placement': quant.fold_scales in ['auto', 'never'] (current auto)
+[  2252.7s] [tune] trial 1: {'quant.fold_scales': 'never'} -> ppl 13.82911  (18.98 min)
+[  2253.3s] [tune] stage kept quant.fold_scales=auto
+[  2253.3s] [tune] stage 'group size': quant.group_size in [128, 64] (current 128)
+[  3474.8s] [tune] trial 2: {'quant.group_size': 64} -> ppl 13.19804  (20.36 min)
+[  3475.6s] [tune] stage winner: quant.group_size=64  ppl 13.84401 -> 13.19804
+[  3475.6s] [tune] stage 'propagation': search.propagate in ['fp', 'quantized'] (current fp)
+[  4682.8s] [tune] trial 3: {'quant.group_size': 64, 'search.propagate': 'quantized'} -> ppl 13.21944  (20.12 min)
+[  4683.5s] [tune] stage kept search.propagate=fp
+[  4683.5s] [tune] best overrides {'quant.group_size': 64} -> configs/examples/qwen2.5-0.5b-cpu.best.yaml  (tune ppl 13.19804)
+[  4683.5s] [tune] leaderboard -> runs/qwen2.5-0.5b-cpu/tuning/leaderboard.csv
+[  4683.5s] [tune] NEXT: run 03_quantize.py + 05_eval.py with the best config for the final, untuned-on test numbers.
