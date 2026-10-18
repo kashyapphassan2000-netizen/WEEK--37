@@ -80,7 +80,7 @@ transformers {env.get('transformers')}. The raw files are in <code>proof/cpu-qwe
 model runs in <b>FP32</b> (CPU half-precision is slow/unsupported), so "original" below means FP32.</p>
 <div class="box note"><b class="tag">SETUP</b> Model <code>{esc(qc['source_model'])}</code> · AWQ {qc['w_bit']}-bit, group {qc['group_size']},
 zero-point={qc['zero_point']}, fold_scales={qc['fold_scales']} · calibration {qc['calibration']['dataset']}
-{qc['calibration']['n_samples']}×{qc['calibration']['seq_len']} tokens · eval: first {base['eval_windows']} windows of 2048 tokens
+{qc['calibration']['n_samples']}×{qc['calibration']['seq_len']} tokens · eval: first {max(base['eval_windows'].values())} windows of 2048 tokens
 per dataset (CPU budget) · {qc['n_linears_quantized']} Linear layers quantized, {qc['n_linears_with_inv_s']} with runtime 1/s.</div>""")
     s.append("<h2>19.1 Perplexity (lower is better)</h2><table><tr><th>Dataset</th><th>Original (FP32)</th>"
              "<th>Naive RTN 4-bit</th><th><b>AWQ 4-bit</b></th><th>RTN gap</th><th>AWQ gap</th><th>Gap closed by AWQ</th></tr>")
@@ -120,7 +120,9 @@ per dataset (CPU budget) · {qc['n_linears_quantized']} Linear layers quantized,
         s.append(f"<tr><td>{k}</td><td>{esc(v)}</td></tr>")
     s.append("</table>")
     s.append("<h2>19.4 Gates</h2><table><tr><th>Gate</th><th>Result</th></tr>")
-    for k, v in {**{f"verify: {k}": v for k, v in ver.get("gates", {}).items()}, **res.get("gates", {})}.items():
+    gates = {**{f"verify: {k}": v for k, v in ver.get("gates", {}).items()}, **res.get("gates", {})}
+    for k, v in gates.items():
+        k = k.replace("of FP16", "of original")
         s.append(f"<tr><td>{esc(k)}</td><td><b style='color:{'#067647' if v else '#b42318'}'>"
                  f"{'PASS' if v else 'FAIL'}</b></td></tr>")
     s.append("</table>")
@@ -146,8 +148,8 @@ per dataset (CPU budget) · {qc['n_linears_quantized']} Linear layers quantized,
              "the hardest (largest error), the classic outlier pattern.</p>")
     gens = PROOF / "generations.md"
     if gens.exists():
-        s.append("<h2>19.6 Generations (first 4 of 10 prompts, greedy)</h2><pre>" +
-                 esc("\n".join(gens.read_text().splitlines()[3:60])) + "</pre>")
+        s.append("<h2>19.6 Generations (first 3 of 10 prompts, greedy; all 10 in generations.md)</h2><pre class='src'>" +
+                 esc("\n".join(gens.read_text().splitlines()[3:45])) + "</pre>")
     lb = PROOF / "tuning" / "leaderboard.csv"
     if lb.exists():
         rows = list(csv.DictReader(lb.open()))

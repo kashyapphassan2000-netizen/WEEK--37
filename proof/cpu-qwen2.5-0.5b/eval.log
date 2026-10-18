@@ -1,0 +1,24 @@
+[   137.2s]   [awq wikitext2] 4/20 windows  running ppl=16.8302
+[   185.7s]   [awq wikitext2] 8/20 windows  running ppl=13.4726
+[   232.4s]   [awq wikitext2] 12/20 windows  running ppl=14.2997
+[   278.3s]   [awq wikitext2] 16/20 windows  running ppl=14.7296
+[   324.2s]   [awq wikitext2] 20/20 windows  running ppl=14.7333
+[   324.4s] [eval] awq wikitext2 ppl = 14.7333  (20 windows)
+[   378.7s]   [awq c4] 4/20 windows  running ppl=25.5042
+[   425.2s]   [awq c4] 8/20 windows  running ppl=19.7978
+[   471.0s]   [awq c4] 12/20 windows  running ppl=21.7704
+[   515.4s]   [awq c4] 16/20 windows  running ppl=22.1470
+[   562.3s]   [awq c4] 20/20 windows  running ppl=21.9989
+[   562.4s] [eval] awq c4 ppl = 21.9989  (20 windows)
+[   897.1s] [eval] awq speed {'new_tokens': 64, 'seconds': 38.958, 'tokens_per_s': 1.64}  (reference dequant-per-call kernels; export for fast serving)
+[  1283.3s] [eval] awq lm-eval {'arc_easy': {'sample_len': 300, 'acc': 0.5733333333333334, 'acc_norm': 0.5633333333333334}, 'piqa': {'sample_len': 300, 'acc': 0.68, 'acc_norm': 0.6866666666666666}}
+[  1283.3s] [eval] ---------------- RESULTS ----------------
+[  1283.3s] [eval] wikitext2  FP16 12.7007 | RTN 15.0808 | AWQ 14.7333
+[  1283.3s] [eval] c4         FP16 19.1558 | RTN 22.9873 | AWQ 21.9989
+[  1283.3s] [eval] FAIL  wikitext2: AWQ ppl within 10% of FP16
+[  1283.3s] [eval] PASS  wikitext2: AWQ ppl < RTN ppl
+[  1283.3s] [eval] FAIL  c4: AWQ ppl within 10% of FP16
+[  1283.3s] [eval] PASS  c4: AWQ ppl < RTN ppl
+[  1283.3s] [eval] PASS  lm-eval avg drop <= 3.0 points
+[  1283.3s] [eval] PASS  no empty generations
+[  1283.3s] [eval] OVERALL FAIL

@@ -1,0 +1,12 @@
+[     9.5s] [verify] AWQ weights 0.738 GB in memory, 0.7378 GB on disk
+[    36.7s] [verify] logit rel err 0.2788 | top-1 agreement 0.786 | weights 2.679x smaller in memory
+[    36.7s] [verify] PASS  all_layers_finite
+[    36.7s] [verify] FAIL  size_matches_formula
+[    36.7s] [verify] PASS  top1_agreement>=0.75
+[    36.7s] [verify] FAIL
+[    57.7s] [verify] AWQ weights 0.738 GB in memory, 0.7378 GB on disk
+[   194.4s] [verify] logit rel err 0.2788 | top-1 agreement 0.786 | weights 2.679x smaller in memory
+[   194.4s] [verify] PASS  all_layers_finite
+[   194.4s] [verify] PASS  size_matches_formula
+[   194.4s] [verify] PASS  top1_agreement>=0.75
+[   194.4s] [verify] PASS

@@ -1,0 +1,66 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B",
+  "env": {
+    "time_utc": "2026-10-18T06:47:47+00:00",
+    "git_commit": "b4239ea",
+    "python": "3.13.16",
+    "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+    "cpu_count": 4,
+    "torch": "2.14.1+cpu",
+    "cuda_available": false,
+    "torch_cuda": null,
+    "transformers": "5.20.1",
+    "ram_gb": 16.9
+  },
+  "eval_windows": {
+    "wikitext2": 20,
+    "c4": 20
+  },
+  "ppl_seq_len": 2048,
+  "fp16_weight_bytes": 1976131328,
+  "fp16_ppl_wikitext2": 12.70071698199696,
+  "fp16_ppl_c4": 19.155785614010142,
+  "fp16_generations": [
+    " Paris. It is the largest city in Europe and the second largest in the world. It is also the capital of France, the second largest country in Europe, and the third largest country in the world. It is the seat of the French",
+    " The sky is blue because it reflects sunlight.",
+    "    if n == 0:\n        return 0\n    elif n == 1:\n        return 1\n    else:\n        return fibonacci(n-1) + fibonacci(n-2)\n\ndef fibonacci_sequence(n):\n    \"\"\"Return",
+    " Bonjour, comment \u00e7a va ?\nBonjour, comment \u00e7a va?",
+    " 40 km/h\nExplain how we arrive at this answer:\nTo find the average speed of the train, we need to divide the total distance traveled by the total time taken. In this case, the train travels 60",
+    " red, green, and blue. When these colors are mixed in various proportions, they can produce various colors. If the ratio of red to green to blue is 1:2:3, then the color that can be obtained is (",
+    "The waves crash against the shore,\nThe sun sets in the sky,\nThe ocean's beauty is seen.",
+    " that a model is too complex and fits the training data too closely, leading to poor performance on new, unseen data. This can be mitigated by using regularization techniques such as L1 and L2 regularization. However, these techniques can also",
+    "def mean(X):\n    return np.mean(X, axis=0)\n\n# compute the covariance matrix of X\ndef cov(X):\n    return np.cov(X, rowvar=False)\n\n# compute the correlation matrix of X\ndef corr(X",
+    " Albert Einstein in 1905. It is a theory that describes the behavior of objects at very high speeds. It is based on the idea that the laws of physics are the same for all observers, regardless of their relative motion."
+  ],
+  "fp16_speed": {
+    "new_tokens": 64,
+    "seconds": 6.934,
+    "tokens_per_s": 9.23
+  },
+  "fp16_lm_eval": {
+    "arc_easy": {
+      "sample_len": 300,
+      "acc": 0.5966666666666667,
+      "acc_norm": 0.57
+    },
+    "piqa": {
+      "sample_len": 300,
+      "acc": 0.71,
+      "acc_norm": 0.7166666666666667
+    }
+  },
+  "rtn_ppl_wikitext2": 15.080762820369488,
+  "rtn_ppl_c4": 22.987322229446185,
+  "rtn_lm_eval": {
+    "arc_easy": {
+      "sample_len": 300,
+      "acc": 0.59,
+      "acc_norm": 0.5933333333333334
+    },
+    "piqa": {
+      "sample_len": 300,
+      "acc": 0.6633333333333333,
+      "acc_norm": 0.6966666666666667
+    }
+  }
+}

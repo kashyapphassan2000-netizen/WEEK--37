@@ -1,0 +1,17 @@
+{
+  "awq_weight_bytes": 737715968,
+  "awq_disk_gb": 0.7378,
+  "awq_gb_formula": 0.7377,
+  "awq_gb_formula_16bit": 0.46,
+  "size_vs_formula": 1.0,
+  "fp16_weight_bytes": 1976131328,
+  "logit_rel_err_mean": 0.27880889773368833,
+  "top1_agreement": 0.7857142857142857,
+  "memory_reduction_x": 2.679,
+  "gates": {
+    "all_layers_finite": true,
+    "size_matches_formula": true,
+    "top1_agreement>=0.75": true
+  },
+  "pass": true
+}

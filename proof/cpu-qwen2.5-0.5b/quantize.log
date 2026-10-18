@@ -1,0 +1,31 @@
+[     0.0s] [quantize] config: {'model': 'Qwen/Qwen2.5-0.5B', 'revision': 'main', 'trust_remote_code': False, 'dtype': 'float32', 'device': 'cpu', 'plugin': None, 'seed': 42, 'quant': {'w_bit': 4, 'group_size': 128, 'zero_point': True, 'skip_modules': [], 'fold_scales': 'auto', 'quantize_experts': True}, 'search': {'n_grid': 20, 'duo_scaling': True, 'max_search_tokens': 8192, 'clip': True, 'clip_grid': 20, 'max_shrink': 0.5, 'clip_tokens': 512, 'propagate': 'fp'}, 'calib': {'dataset': 'pileval', 'n_samples': 64, 'seq_len': 512, 'batch_size': 8}, 'eval': {'ppl_datasets': ['wikitext2', 'c4'], 'ppl_seq_len': 2048, 'max_windows': 20, 'lm_eval_tasks': ['arc_easy', 'piqa'], 'lm_eval_limit': 300, 'lm_eval_batch_size': '8', 'gen_max_new_tokens': 48, 'custom_jsonl': None, 'tune_dataset': 'wikitext2_val', 'tune_max_windows': 20}, 'io': {'work_dir': 'runs/qwen2.5-0.5b-cpu'}}
+[     5.9s] [quantize] model files: /tmp/claude-0/-home-user-WEEK--37/00117478-584b-5be6-a9e2-bc6c09f40426/scratchpad/hf/hub/models--Qwen--Qwen2.5-0.5B/snapshots/060db6499f32faf8b98477b0a26969ef7d8b9987
+[     6.3s] [model_io] mode=stream  blocks=model.layers x24  fp8_ckpt=False
+[     6.9s] [quantize] family=qwen2 blocks=24 fold_scales=auto (fold-capable family: True)
+[    10.5s] [quantize] calibration: pileval (64, 512) tokens
+[    10.6s] [quantize] block-0 inputs (64, 512, 896) torch.float32
+[    47.0s] [quantize] block 1/24  rel_mse=1.22e-02  alphas=[0.2, 0.2, 0.1]  experts=0  36.4s
+[    79.1s] [quantize] block 2/24  rel_mse=6.59e-03  alphas=[0.25, 0.15, 0.2]  experts=0  32.1s
+[   115.4s] [quantize] block 3/24  rel_mse=2.93e-03  alphas=[0.3, 0.2, 0.7]  experts=0  36.3s
+[   151.0s] [quantize] block 4/24  rel_mse=1.87e-04  alphas=[0.2, 0.45]  experts=0  35.6s
+[   184.8s] [quantize] block 5/24  rel_mse=2.10e-04  alphas=[0.25, 0.2, 0.4]  experts=0  33.9s
+[   215.8s] [quantize] block 6/24  rel_mse=1.88e-04  alphas=[0.25, 0.2, 0.35]  experts=0  31.0s
+[   247.0s] [quantize] block 7/24  rel_mse=1.86e-04  alphas=[0.25, 0.25, 0.35]  experts=0  31.2s
+[   280.0s] [quantize] block 8/24  rel_mse=2.21e-04  alphas=[0.3, 0.25, 0.3]  experts=0  33.0s
+[   315.6s] [quantize] block 9/24  rel_mse=2.41e-04  alphas=[0.4, 0.25, 0.15]  experts=0  35.6s
+[   346.7s] [quantize] block 10/24  rel_mse=2.22e-04  alphas=[0.3, 0.25, 0.1]  experts=0  31.0s
+[   380.4s] [quantize] block 11/24  rel_mse=1.84e-04  alphas=[0.3, 0.2, 0.2]  experts=0  33.7s
+[   415.7s] [quantize] block 12/24  rel_mse=2.69e-04  alphas=[0.25, 0.1]  experts=0  35.3s
+[   445.1s] [quantize] block 13/24  rel_mse=1.82e-04  alphas=[0.25, 0.25, 0.2]  experts=0  29.4s
+[   476.7s] [quantize] block 14/24  rel_mse=2.21e-04  alphas=[0.3, 0.3, 0.2]  experts=0  31.6s
+[   507.6s] [quantize] block 15/24  rel_mse=3.57e-04  alphas=[0.2, 0.3, 0.1]  experts=0  30.9s
+[   537.4s] [quantize] block 16/24  rel_mse=3.45e-04  alphas=[0.25, 0.25, 0.25]  experts=0  29.8s
+[   567.2s] [quantize] block 17/24  rel_mse=1.03e-03  alphas=[0.3, 0.3]  experts=0  29.7s
+[   596.8s] [quantize] block 18/24  rel_mse=6.12e-04  alphas=[0.25, 0.25, 0.25]  experts=0  29.7s
+[   626.4s] [quantize] block 19/24  rel_mse=5.70e-04  alphas=[0.3, 0.25, 0.3]  experts=0  29.6s
+[   658.1s] [quantize] block 20/24  rel_mse=9.01e-04  alphas=[0.3, 0.3, 0.15]  experts=0  31.7s
+[   687.8s] [quantize] block 21/24  rel_mse=1.88e-03  alphas=[0.35, 0.3, 0.2]  experts=0  29.8s
+[   718.6s] [quantize] block 22/24  rel_mse=4.98e-03  alphas=[0.25, 0.25, 0.35]  experts=0  30.8s
+[   751.4s] [quantize] block 23/24  rel_mse=2.76e-03  alphas=[0.25, 0.25, 0.2]  experts=0  32.8s
+[   782.8s] [quantize] block 24/24  rel_mse=4.74e-03  alphas=[0.35, 0.25, 0.25]  experts=0  31.4s
+[   786.6s] [quantize] DONE -> runs/qwen2.5-0.5b-cpu/quantized  (168 linears, 0 expert tensors, 0 skipped)

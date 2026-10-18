@@ -1,0 +1,45 @@
+model: Qwen/Qwen2.5-0.5B
+revision: main
+trust_remote_code: false
+dtype: float32
+device: cpu
+plugin: null
+seed: 42
+quant:
+  w_bit: 4
+  group_size: 128
+  zero_point: true
+  skip_modules: []
+  fold_scales: auto
+  quantize_experts: true
+search:
+  n_grid: 20
+  duo_scaling: true
+  max_search_tokens: 8192
+  clip: true
+  clip_grid: 20
+  max_shrink: 0.5
+  clip_tokens: 512
+  propagate: fp
+calib:
+  dataset: pileval
+  n_samples: 64
+  seq_len: 512
+  batch_size: 8
+eval:
+  ppl_datasets:
+  - wikitext2
+  - c4
+  ppl_seq_len: 2048
+  max_windows: 20
+  lm_eval_tasks:
+  - arc_easy
+  - piqa
+  lm_eval_limit: 300
+  lm_eval_batch_size: '8'
+  gen_max_new_tokens: 48
+  custom_jsonl: null
+  tune_dataset: wikitext2_val
+  tune_max_windows: 20
+io:
+  work_dir: runs/qwen2.5-0.5b-cpu

@@ -89,7 +89,7 @@ def main():
             fp, rtn, awq = base.get(f"fp16_ppl_{d}"), base.get(f"rtn_ppl_{d}"), res[f"awq_ppl_{d}"]
             if fp:
                 res[f"awq_vs_fp16_{d}"] = (awq - fp) / fp
-                gates[f"{d}: AWQ ppl within {ppl_gate:.0%} of FP16"] = res[f"awq_vs_fp16_{d}"] <= ppl_gate
+                gates[f"{d}: AWQ ppl within {ppl_gate:.0%} of original"] = res[f"awq_vs_fp16_{d}"] <= ppl_gate
             if rtn:
                 res[f"rtn_vs_fp16_{d}"] = (rtn - fp) / fp if fp else None
                 gates[f"{d}: AWQ ppl < RTN ppl"] = awq < rtn
@@ -107,11 +107,12 @@ def main():
         if not args.no_gen:
             gates["no empty generations"] = all(g.strip() for g in res["awq_generations"])
             fp_g = base.get("fp16_generations") or [""] * len(DEFAULT_PROMPTS)
-            md = ["# Generations: FP16 vs AWQ (greedy, same prompts)\n",
+            orig = f"Original ({rc.dtype})"
+            md = [f"# Generations: {orig} vs AWQ (greedy, same prompts)\n",
                   f"Model: `{rc.model}` | AWQ: {rc.quant.w_bit}-bit g{rc.quant.group_size} | "
                   f"max_new_tokens={rc.eval.gen_max_new_tokens}\n"]
             for pr, a, b in zip(DEFAULT_PROMPTS, fp_g, res["awq_generations"]):
-                md += [f"## Prompt\n```\n{pr}\n```", f"**FP16:**\n```\n{a.strip()}\n```",
+                md += [f"## Prompt\n```\n{pr}\n```", f"**{orig}:**\n```\n{a.strip()}\n```",
                        f"**AWQ:**\n```\n{b.strip()}\n```\n"]
             (rc.work_dir / "generations.md").write_text("\n".join(md))
     else:

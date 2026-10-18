@@ -1,0 +1,33 @@
+[    17.4s] [baseline] eval set wikitext2: 20 windows x 2048 tokens
+[    17.4s] [baseline] eval set c4: 20 windows x 2048 tokens
+[    17.4s] [baseline] loading fp16 model ...
+[   124.0s]   [fp16 wikitext2] 4/20 windows  running ppl=14.5696
+[   168.6s]   [fp16 wikitext2] 8/20 windows  running ppl=11.5918
+[   212.2s]   [fp16 wikitext2] 12/20 windows  running ppl=12.2736
+[   256.1s]   [fp16 wikitext2] 16/20 windows  running ppl=12.6492
+[   298.9s]   [fp16 wikitext2] 20/20 windows  running ppl=12.7007
+[   299.0s] [baseline] fp16 wikitext2 ppl = 12.7007
+[   344.9s]   [fp16 c4] 4/20 windows  running ppl=22.6311
+[   387.9s]   [fp16 c4] 8/20 windows  running ppl=17.4993
+[   430.1s]   [fp16 c4] 12/20 windows  running ppl=19.1170
+[   473.2s]   [fp16 c4] 16/20 windows  running ppl=19.2038
+[   515.3s]   [fp16 c4] 20/20 windows  running ppl=19.1558
+[   515.4s] [baseline] fp16 c4 ppl = 19.1558
+[   563.1s] [baseline] fp16 speed {'new_tokens': 64, 'seconds': 6.934, 'tokens_per_s': 9.23}
+[   837.7s] [baseline] fp16 lm-eval {'arc_easy': {'sample_len': 300, 'acc': 0.5966666666666667, 'acc_norm': 0.57}, 'piqa': {'sample_len': 300, 'acc': 0.71, 'acc_norm': 0.7166666666666667}}
+[   838.2s] [baseline] loading rtn model ...
+[   847.4s] [baseline] RTN applied to 168 weight tensors
+[   900.8s]   [rtn wikitext2] 4/20 windows  running ppl=17.3980
+[   946.4s]   [rtn wikitext2] 8/20 windows  running ppl=13.7294
+[   992.6s]   [rtn wikitext2] 12/20 windows  running ppl=14.6018
+[  1041.8s]   [rtn wikitext2] 16/20 windows  running ppl=15.0444
+[  1089.2s]   [rtn wikitext2] 20/20 windows  running ppl=15.0808
+[  1089.3s] [baseline] rtn wikitext2 ppl = 15.0808
+[  1139.5s]   [rtn c4] 4/20 windows  running ppl=26.8498
+[  1185.9s]   [rtn c4] 8/20 windows  running ppl=20.6394
+[  1231.0s]   [rtn c4] 12/20 windows  running ppl=22.6717
+[  1279.5s]   [rtn c4] 16/20 windows  running ppl=23.1014
+[  1326.4s]   [rtn c4] 20/20 windows  running ppl=22.9873
+[  1326.6s] [baseline] rtn c4 ppl = 22.9873
+[  1607.8s] [baseline] rtn lm-eval {'arc_easy': {'sample_len': 300, 'acc': 0.59, 'acc_norm': 0.5933333333333334}, 'piqa': {'sample_len': 300, 'acc': 0.6633333333333333, 'acc_norm': 0.6966666666666667}}
+[  1608.4s] [baseline] wrote runs/qwen2.5-0.5b-cpu/baseline.json

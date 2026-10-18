@@ -1,0 +1,99 @@
+{
+  "model": "Qwen/Qwen2.5-0.5B",
+  "env": {
+    "time_utc": "2026-10-18T08:20:11+00:00",
+    "git_commit": "b4239ea",
+    "python": "3.13.16",
+    "platform": "Linux-6.18.44-fc-v139-x86_64-with-glibc2.39",
+    "cpu_count": 4,
+    "torch": "2.14.1+cpu",
+    "cuda_available": false,
+    "torch_cuda": null,
+    "transformers": "5.20.1",
+    "ram_gb": 16.9
+  },
+  "quant_config": {
+    "format": "awq-from-scratch-native-v1",
+    "source_model": "Qwen/Qwen2.5-0.5B",
+    "revision": "main",
+    "family": "qwen2",
+    "w_bit": 4,
+    "group_size": 128,
+    "zero_point": true,
+    "fold_scales": "auto",
+    "dtype": "float32",
+    "trust_remote_code": false,
+    "tie_word_embeddings": true,
+    "plugin": null,
+    "calibration": {
+      "dataset": "pileval",
+      "n_samples": 64,
+      "seq_len": 512
+    },
+    "search": {
+      "n_grid": 20,
+      "duo_scaling": true,
+      "max_search_tokens": 8192,
+      "clip": true,
+      "clip_grid": 20,
+      "max_shrink": 0.5,
+      "clip_tokens": 512,
+      "propagate": "fp"
+    },
+    "n_linears_quantized": 168,
+    "n_linears_with_inv_s": 0,
+    "n_expert_tensors_quantized": 0,
+    "created_utc": "2026-10-18T07:27:29+00:00",
+    "git_commit": "b4239ea"
+  },
+  "awq_weight_bytes": 737715968,
+  "awq_ppl_wikitext2": 14.733337126998526,
+  "eval_windows_wikitext2": 20,
+  "awq_ppl_c4": 21.99893120535284,
+  "eval_windows_c4": 20,
+  "awq_generations": [
+    " Paris. It is the seat of the government of France. It is also the capital of the French Republic. The city is located in the North of the country. It is the largest city in France by population. It is the second largest",
+    " The sky is blue because it is made up of sunlight reflected off the water surface.",
+    "    if n < 0:\n        raise ValueError(\"n must be a non-negative integer\")\n    if n == 0:\n        return 0\n    if n == 1:\n        return 1\n    return fibonacci(n -",
+    " \nLe fran\u00e7ais de la phrase 'Good morning, how are you?' est : \nLe fran\u00e7ais de la phrase 'Good morning, how are you?' est : \nLe fran\u00e7ais de la phrase 'Good morning, how are you?' est :",
+    " 120 km/h\nYou are a helpful assistant. Let's try to solve your problem.\n\nQ: If a train travels 60 km in 1.5 hours, what is its average speed?\nA: 1",
+    " red, green, and blue. If you mix these colors in any proportion, you can create various shades of color. For example, mixing red and blue can create a purple color, and mixing red and green can create a green color.",
+    "The ocean, a vast, blue, and endless sea,\nA place where life thrives and grows.\nThe waves crash and crash, and the sun shines bright,\nA place where the ocean's power is seen.\nThe ocean, a vast",
+    " that the model is too complex and fits the training data too closely, leading to poor generalization to new data. This can be a problem because the model may not generalize well to new data, which can result in poor performance on new data",
+    "def mean(X):\n    return X.mean(axis=0)\n\n# compute the mean of each column of matrix X\ndef mean(X):\n    return X.mean(axis=0)\n\n# compute the mean of each column of matrix X\ndef mean",
+    " the famous scientist __________.\nA. Einstein\nB. Newton\nC. Galileo\nD. Descartes\n\u7b54\u6848: A\n\n\u4e0b\u5217\u5173\u4e8e\u201c\u4e09\u6b65\u8d70\u201d\u7684\u8bf4\u6cd5\uff0c\u6b63\u786e\u7684\u662f____\u3002\nA. \u4e09\u6b65\u8d70"
+  ],
+  "awq_speed": {
+    "new_tokens": 64,
+    "seconds": 38.958,
+    "tokens_per_s": 1.64
+  },
+  "awq_lm_eval": {
+    "arc_easy": {
+      "sample_len": 300,
+      "acc": 0.5733333333333334,
+      "acc_norm": 0.5633333333333334
+    },
+    "piqa": {
+      "sample_len": 300,
+      "acc": 0.68,
+      "acc_norm": 0.6866666666666666
+    }
+  },
+  "size_class": "<=3B",
+  "awq_vs_fp16_wikitext2": 0.1600397952243774,
+  "rtn_vs_fp16_wikitext2": 0.18739460470981287,
+  "awq_vs_fp16_c4": 0.1484222912404741,
+  "rtn_vs_fp16_c4": 0.2000198108624549,
+  "weight_memory_reduction_x": 2.679,
+  "lm_eval_avg_drop_points": 1.8333333333333313,
+  "gates": {
+    "wikitext2: AWQ ppl within 10% of FP16": false,
+    "wikitext2: AWQ ppl < RTN ppl": true,
+    "c4: AWQ ppl within 10% of FP16": false,
+    "c4: AWQ ppl < RTN ppl": true,
+    "lm-eval avg drop <= 3.0 points": true,
+    "no empty generations": true
+  },
+  "pass": false
+}
