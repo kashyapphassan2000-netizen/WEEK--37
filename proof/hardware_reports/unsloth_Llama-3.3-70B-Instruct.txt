@@ -1,0 +1,13 @@
+MODEL      unsloth/Llama-3.3-70B-Instruct   [llama]   verdict: PASS
+PARAMS     total 70.554 B | quantizable 68.451 B (100% of block weights) | blocks 80 | dense
+SIZE       FP16 141.11 GB -> AWQ-4bit 39.8 GB  (3.55x)   checkpoint on disk 141.11 GB
+MEMORY     largest block 1.711 GB | calib activations 3.758 GB | KV@8192 2.684 GB | CPU RAM >= 20.7 GB | disk >= 200.9 GB
+
+PHASE           VRAM need  RENT (cheapest)            $/hr  hours*    cost*   alternatives
+A quantize         28.0 GB  1x L40S                    0.79    5.11    $5.04   1x A100 80GB ($1.19), 1x H100 80GB ($1.99), 1x H200 ($3.59)
+B FP16 eval       169.3 GB  8x RTX 4090                2.72    1.01    $3.42   4x L40S ($3.16), 3x A100 80GB ($3.57), 3x H100 80GB ($5.97)
+C serve AWQ        48.9 GB  1x A100 80GB               1.19     0.3    $0.45   4x RTX 4090 ($1.36), 2x L40S ($1.58), 1x H100 80GB ($1.99)
+
+* ESTIMATES. Prices: https://www.runpod.io/gpu-cloud/pricing (checked 2026-10-08). Edit configs/gpus.yaml for your provider.
+
+wrote proof/hardware_reports/unsloth_Llama-3.3-70B-Instruct.json

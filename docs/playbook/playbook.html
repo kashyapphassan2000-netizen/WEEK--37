@@ -1,0 +1,723 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Universal AWQ Quantization Playbook</title>
+<style>
+  @page { size: A4; margin: 16mm 15mm 16mm 15mm; }
+  :root {
+    --ink: #14171f; --muted: #5a6273; --accent: #6d3fd8; --accent2: #1f6feb;
+    --line: #d9dde5; --codebg: #f4f5f8; --warn: #b54708; --warnbg: #fff6ed;
+    --pass: #067647; --passbg: #ecfdf3; --truth: #b42318; --truthbg: #fef3f2;
+    --notebg: #eff4ff;
+  }
+  html, body { background: #fff; }
+  body { font-family: "Inter", "Helvetica Neue", Arial, sans-serif; color: var(--ink); font-size: 10.2pt; line-height: 1.5; }
+  h1 { font-size: 21pt; color: var(--accent); margin: 0 0 8px; page-break-before: always; padding-top: 2px; }
+  h1.first { page-break-before: avoid; }
+  h2 { font-size: 13.5pt; color: var(--accent2); margin: 18px 0 6px; }
+  h3 { font-size: 11pt; margin: 14px 0 4px; }
+  p { margin: 5px 0 7px; }
+  code { font-family: "JetBrains Mono", "DejaVu Sans Mono", monospace; font-size: 8.6pt; background: var(--codebg); padding: 0 3px; border-radius: 3px; }
+  pre { font-family: "JetBrains Mono", "DejaVu Sans Mono", monospace; font-size: 8.3pt; line-height: 1.42; background: var(--codebg); border: 1px solid var(--line); border-left: 3px solid var(--accent); padding: 8px 10px; white-space: pre-wrap; word-break: break-word; page-break-inside: avoid; margin: 6px 0 9px; }
+  pre.cmd { border-left-color: #e8590c; }
+  pre .c { color: #6b7280; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0 10px; font-size: 8.7pt; page-break-inside: avoid; }
+  th, td { border: 1px solid var(--line); padding: 4px 6px; vertical-align: top; text-align: left; }
+  th { background: #f0ecfb; color: #3b1f8f; }
+  .small { font-size: 8.4pt; color: var(--muted); }
+  .box { border-radius: 6px; padding: 7px 11px; margin: 8px 0 10px; page-break-inside: avoid; border: 1px solid; }
+  .box b.tag { letter-spacing: .04em; margin-right: 6px; }
+  .warn { background: var(--warnbg); border-color: #fbd5b0; } .warn b.tag { color: var(--warn); }
+  .pass { background: var(--passbg); border-color: #abefc6; } .pass b.tag { color: var(--pass); }
+  .truth { background: var(--truthbg); border-color: #fecdca; } .truth b.tag { color: var(--truth); }
+  .note { background: var(--notebg); border-color: #c7d7fe; } .note b.tag { color: var(--accent2); }
+  ul, ol { margin: 4px 0 8px 18px; padding: 0; } li { margin: 2px 0; }
+  .cover { height: 255mm; display: flex; flex-direction: column; }
+  .band { background: linear-gradient(120deg, #6d3fd8, #1f6feb); color: #fff; padding: 26px 26px 22px; border-radius: 10px; }
+  .band .kicker { font-weight: 700; letter-spacing: .12em; font-size: 9pt; opacity: .9; }
+  .band .title { font-size: 30pt; font-weight: 800; line-height: 1.1; margin: 8px 0 6px; }
+  .band .sub { font-size: 11.5pt; opacity: .95; }
+  .meta td { border: none; padding: 3px 6px 3px 0; font-size: 10pt; }
+  .meta td:first-child { color: var(--accent); font-weight: 700; width: 130px; }
+  .flow { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin: 8px 0 10px; }
+  .flow div { border: 1px solid var(--line); border-radius: 6px; padding: 6px 7px; font-size: 8.4pt; background: #fafbfc; page-break-inside: avoid; }
+  .flow div b { color: var(--accent); display: block; font-size: 8.8pt; }
+  .toc td { border: none; border-bottom: 1px solid var(--line); padding: 4px 6px; font-size: 10pt; }
+  .toc td:first-child { color: var(--accent); width: 34px; font-weight: 700; }
+  .keep { page-break-inside: avoid; }
+  pre.src { font-size: 7.2pt; line-height: 1.32; page-break-inside: auto; border-left-color: #94a3b8; }
+  h2.src { font-size: 10.5pt; margin-top: 14px; page-break-after: avoid; }
+</style>
+</head>
+<body>
+
+<!-- ============================ COVER ============================ -->
+<div class="cover">
+  <div class="band">
+    <div class="kicker">WEEK 37 · FRONTIER · v1.0 · BUILT, TESTED, CPU-PROVEN</div>
+    <div class="title">Universal AWQ Quantization Playbook</div>
+    <div class="sub">Any open model, from 1B to 1T parameters → right-sized rented GPU → 4-bit AWQ → evaluated, tuned, exported, shipped. Every command, every decision, no sugarcoating.</div>
+  </div>
+  <div style="margin-top:22px">
+    <table class="meta">
+      <tr><td>What this is</td><td>The end-to-end operating manual + the build plan for the code that goes into <code>github.com/kashyapphassan2000-netizen/WEEK--37</code>. It covers the whole flow: pick a model, size the hardware (AI-assisted or by formula), get tokens, rent the GPU, connect (SSH / VS Code / WinSCP), install the stack, run AWQ, evaluate, tune, export and hand back the model.</td></tr>
+      <tr><td>Built on</td><td>Your <i>AWQ From Scratch — Week 37 Build Guide</i> (40 pp). I kept its algorithm and day-by-day spirit, fixed the bugs I found in it (Section 2) and rebuilt the pipeline so it works on any size of model, not just models that fit on one GPU.</td></tr>
+      <tr><td>Status</td><td><b>Built.</b> The code is in the repo, 30 unit and integration tests pass, and the full pipeline (gates 00–05 plus tuning) ran end to end on a real model (Qwen2.5-0.5B, CPU). The measured numbers are in Section 19. Every file is explained in Section 18 and printed in full in the Appendix.</td></tr>
+      <tr><td>Date</td><td>18 October 2026. GPU prices were checked this month (RunPod page dated 8 Oct 2026) and they change every month, so re-check before you rent.</td></tr>
+    </table>
+  </div>
+  <div class="box truth" style="margin-top:18px"><b class="tag">BRUTAL TRUTH</b>
+  The build machine had <b>no GPU</b>. Everything in Section 19 was measured on a 4-core CPU with Qwen2.5-0.5B. That proves correctness and the full workflow, not GPU speed. 7B, 70B and 1T numbers come from <b>your</b> rented-GPU run (template: <code>proof/GPU_RUN_TEMPLATE.md</code>). Nothing in the repo is a number that wasn't measured. Estimates are labelled as estimates.</div>
+  <div class="box note"><b class="tag">REMOVED</b> The AISIL / ISO 26262 / automotive appendix in the original PDF is dropped. This playbook is purely AI engineering.</div>
+</div>
+
+<!-- ============================ TOC ============================ -->
+<h1>Contents</h1>
+<table class="toc">
+<tr><td>0</td><td>The flow at a glance, and what "universal" honestly means</td></tr>
+<tr><td>1</td><td>Brutal truths before you spend a rupee</td></tr>
+<tr><td>2</td><td>Audit of the original Week-37 PDF: bugs found and what changes</td></tr>
+<tr><td>3</td><td>Step 1: Choose your model (HF Hub, gated Llama/Gemma, ModelScope, your own model)</td></tr>
+<tr><td>4</td><td>Step 2: Size the hardware. Option A: AI-assisted prompt. Option B: manual formula</td></tr>
+<tr><td>5</td><td>Step 3: Accounts, tokens and model access</td></tr>
+<tr><td>6</td><td>Step 4: Rent the GPU (providers, prices, decision map, budget)</td></tr>
+<tr><td>7</td><td>Step 5: Connect (SSH keys, VS Code Remote-SSH, WinSCP, tmux)</td></tr>
+<tr><td>8</td><td>Step 6: Install the stack (driver, CUDA, PyTorch: what to install and what NOT to)</td></tr>
+<tr><td>9</td><td>Step 7: The codebase (every file and what it does, in plain words)</td></tr>
+<tr><td>10</td><td>Step 8: Transfer and run (the exact command sequence)</td></tr>
+<tr><td>11</td><td>Step 9: Evaluation (what to measure and pass/fail gates)</td></tr>
+<tr><td>12</td><td>Step 10: Hyperparameter tuning (the knobs that actually raise accuracy)</td></tr>
+<tr><td>13</td><td>Step 11: Export, give back, shut down</td></tr>
+<tr><td>14</td><td>Proof of work: what lands in GitHub</td></tr>
+<tr><td>15</td><td>Troubleshooting</td></tr>
+<tr><td>16</td><td>Command master sheet (one page)</td></tr>
+<tr><td>17</td><td>Status: what is done, what is not (honest)</td></tr>
+<tr><td>18</td><td>Code walkthrough: every file in plain words</td></tr>
+<tr><td>19</td><td>Proof: measured results (CPU run, Qwen2.5-0.5B) and tuning</td></tr>
+<tr><td>20</td><td>Hardware reports for reference models (1B → 1T)</td></tr>
+<tr><td>A</td><td>Appendix: full source code</td></tr>
+</table>
+
+<!-- ============================ 0 ============================ -->
+<h1>0. The flow at a glance</h1>
+<div class="flow">
+  <div><b>1 · Pick model</b>HF id, gated repo, ModelScope, or your own folder. Needs original 16-bit or FP8 weights, never GGUF.</div>
+  <div><b>2 · Size hardware</b>AI prompt (Option A) or formula (Option B), cross-checked by <code>01_inspect_model.py</code>.</div>
+  <div><b>3 · Access</b>HF token (read/write), accept license, <code>hf auth login</code>.</div>
+  <div><b>4 · Rent GPU</b>Pick provider + GPU + count from the decision map. Attach a volume.</div>
+  <div><b>5 · Connect</b>SSH key → VS Code Remote-SSH and/or WinSCP. Start <code>tmux</code>.</div>
+  <div><b>6 · Install</b>Check driver, create venv, install the right PyTorch wheel, run <code>00_env_check.py</code>.</div>
+  <div><b>7 · Transfer code</b><code>git clone</code> (best) or drag the folder with WinSCP.</div>
+  <div><b>8 · Download weights</b><code>hf download</code> to the volume (not the container disk).</div>
+  <div><b>9 · Baseline</b>FP16 + naive RTN perplexity. This is the number to beat.</div>
+  <div><b>10 · Quantize</b>Block-by-block: calibrate → scale search → clip search → pack INT4.</div>
+  <div><b>11 · Verify</b>Logit check vs FP16, real VRAM, real size on disk.</div>
+  <div><b>12 · Evaluate</b>PPL (WikiText-2, C4), lm-eval tasks, generation side-by-side, speed.</div>
+  <div><b>13 · Tune</b>Group size, calibration data, samples, skip-layers. Tuned on a held-out split, never the test set.</div>
+  <div><b>14 · Export</b>Native format + standard AWQ (vLLM-loadable) where the architecture allows.</div>
+  <div><b>15 · Give back</b>Push to HF (private first), download via WinSCP, write the model card.</div>
+  <div><b>16 · Shut down</b>Stop, then delete the pod <i>and</i> the volume. Check the billing page.</div>
+</div>
+
+<h2>What "universal" honestly means</h2>
+<table>
+<tr><th>Works</th><th>Works with caveats</th><th>Does not work (and why)</th></tr>
+<tr><td>
+Any decoder-only text LLM that loads with <code>AutoModelForCausalLM</code>: Llama 2/3/3.1/3.2/3.3, Mistral, Mixtral, Qwen 2/2.5/3, Gemma 2/3, Phi-3/4, OLMo, Falcon, GPT-NeoX, StarCoder2, DeepSeek-style… at any size, because the pipeline streams one decoder block at a time.
+</td><td>
+<b>MoE</b> (Mixtral, Qwen-MoE, DeepSeek-V3, Kimi K2): experts are calibrated with the tokens actually routed to them, and router layers stay 16-bit.<br>
+<b>FP8 checkpoints</b> (DeepSeek-V3/R1, Kimi K2): dequantized block by block while loading.<br>
+<b>Custom code</b> (<code>trust_remote_code</code>): works if the model is built from a repeated list of blocks containing <code>nn.Linear</code>.<br>
+<b>Vision-language models</b>: only the language tower gets quantized.<br>
+<b>Your own PyTorch model</b>: via a small plug-in function (Section 3.4).
+</td><td>
+<b>GGUF / Ollama files</b>: they're already quantized. Re-quantizing stacks the errors, so go back to the original weights.<br>
+<b>Already-quantized repos</b> (GPTQ, AWQ, bnb, MLX 4-bit): same reason.<br>
+<b>Encoders, diffusion, audio</b>: the AWQ math applies, but calibration and eval are different. Not in v1.<br>
+<b>"Better than FP16"</b>: quantization can't improve the base model. Tuning only shrinks the gap.
+</td></tr>
+</table>
+
+<!-- ============================ 1 ============================ -->
+<h1>1. Brutal truths before you spend a rupee</h1>
+<ol>
+<li><b>AWQ is weight-only 4-bit.</b> It shrinks weights about 3.5–4× and memory at inference roughly 3×. It does <b>not</b> make a from-scratch PyTorch implementation fast. Speed comes from fused kernels (vLLM / SGLang AWQ-Marlin). That's why export to the standard AWQ format (Section 13) matters.</li>
+<li><b>Small models get hurt more.</b> A 1B model typically loses 5–10% perplexity at 4-bit. A 70B model typically loses 1–3%. Code, math and long-context tasks degrade more than perplexity suggests, so always test on <i>your</i> task.</li>
+<li><b>The FP16 baseline is often the most expensive part.</b> Quantizing 70B needs one 80 GB GPU (block-by-block). <i>Evaluating</i> 70B in FP16 needs about 170 GB of VRAM (2–3 GPUs). For a 1T model, an FP16 baseline isn't practical. You compare against the published numbers instead, and the guide says so out loud.</li>
+<li><b>"Trillion-parameter" is a logistics problem before it's a GPU problem.</b> Kimi-K2-class means about 1 TB to download, 2–4 TB of disk, many hours of quantization and an 8-GPU node just to <i>serve</i> the result. Budget hundreds of dollars, not $3.</li>
+<li><b>An AI assistant's hardware estimate is a draft, not a decision.</b> LLMs mis-read configs and hallucinate parameter counts. Option A is fast. Option B and <code>01_inspect_model.py</code> are the truth.</li>
+<li><b>Tuning on the test set is cheating.</b> All tuning in this playbook uses a held-out calibration-style split. WikiText-2 test and lm-eval are run once, at the end.</li>
+<li><b>Spot / community GPUs get reclaimed.</b> The pipeline writes a checkpoint after every block and resumes automatically. Use <code>tmux</code>. Keep your work on a persistent volume.</li>
+<li><b>Idle GPUs burn money.</b> The most common beginner cost isn't compute. It's forgetting to delete a pod or a volume.</li>
+</ol>
+
+<!-- ============================ 2 ============================ -->
+<h1>2. Audit of the original Week-37 PDF</h1>
+<p>I read all 40 pages. The math (Sections 1–2 of the original) is right and the 7-day structure is good. These are the issues that would bite you on a real run, and what the new code does about each:</p>
+<table>
+<tr><th style="width:4%">#</th><th style="width:40%">Problem in the original</th><th>Consequence → fix in this project</th></tr>
+<tr><td>1</td><td>Loads the <b>whole FP16 model onto one GPU</b> for collection, search and eval.</td><td>Caps out around 30B on an 80 GB card, so it can't do 70B, 405B or 1T. <b>Fix:</b> block-by-block streaming. Only one decoder block plus its calibration activations sit on the GPU. Weights are read shard by shard from <code>safetensors</code>.</td></tr>
+<tr><td>2</td><td>Calibration loader uses <code>padding="max_length"</code>.</td><td><b>Crashes on Llama tokenizers</b> (they have no pad token), and where it doesn't crash it feeds pad tokens into the statistics. <b>Fix:</b> concatenate texts and cut exact <code>seq_len</code> windows, with no padding.</td></tr>
+<tr><td>3</td><td>The AWQ VRAM figure is measured after loading FP16 to the GPU and swapping layers, without resetting peak stats.</td><td>The reported "AWQ VRAM" is really the FP16 peak, so the "3× drop" claim can't be measured this way. <b>Fix:</b> build the quantized model on the <code>meta</code> device, load packed weights only, reset peak stats, then measure.</td></tr>
+<tr><td>4</td><td>Scales are searched per single Linear, and <code>1/s</code> is applied at runtime in every layer.</td><td>Correct, but slow, and it can't be exported to the standard AWQ format (vLLM expects <code>1/s</code> folded into the previous norm/linear). <b>Fix:</b> Linears that share the same input tensor (q/k/v, gate/up) are detected automatically and get one scale per group. That scale is folded into the producer for known families (Llama, Mistral, Qwen2/3, Gemma*, Mixtral attention). Unknown families keep a runtime <code>inv_s</code> (always correct, native format only).</td></tr>
+<tr><td>5</td><td>No weight-clipping search. Symmetric only. Normalises <code>s</code> by its mean.</td><td>Leaves accuracy on the table compared with the official AWQ. <b>Fix:</b> add the AWQ clip search, an asymmetric (zero-point) mode (the default, and the standard format) and the official <code>s/√(max·min)</code> normalisation.</td></tr>
+<tr><td>6</td><td>Excludes the output head by the name <code>"lm_head"</code>.</td><td>GPT-NeoX calls it <code>embed_out</code> and others call it <code>output</code>, so they would get quantized by accident. <b>Fix:</b> only quantize Linears <i>inside</i> the repeated decoder blocks. Routers and tiny layers are skipped automatically.</td></tr>
+<tr><td>7</td><td>The "expected" numbers (e.g. AWQ PPL 9.97, 0.74 GB) are illustrative.</td><td>Putting them in a blog or README as results would be false. <b>Fix:</b> the repo reports only measured JSON, with the hardware, commit hash and timestamp.</td></tr>
+<tr><td>8</td><td><code>huggingface-cli login</code></td><td>Deprecated in current <code>huggingface_hub</code>. <b>Fix:</b> <code>hf auth login</code>, <code>hf download</code>, <code>hf upload</code>.</td></tr>
+<tr><td>9</td><td>No resume and no checkpointing.</td><td>A reclaimed spot pod at hour 5 of a 70B run means starting over. <b>Fix:</b> per-block checkpoints and <code>--resume</code>.</td></tr>
+<tr><td>10</td><td>No MoE, FP8, custom-code or own-model support.</td><td><b>Fix:</b> Section 0 table, plus the plug-in hook in 3.4.</td></tr>
+</table>
+<div class="box note"><b class="tag">KEPT</b> The derivation (<code>y = (x/s)·(W·diag(s))ᵀ</code>, <code>s = mean|x|^α</code>, α grid search), the pack/unpack roundtrip test, the forward-verify gate and the day-by-day pass/fail discipline.</div>
+
+<!-- ============================ 3 ============================ -->
+<h1>3. Step 1: Choose your model</h1>
+<h2>3.1 Where models come from</h2>
+<table>
+<tr><th>Source</th><th>How you reference it</th><th>Notes</th></tr>
+<tr><td>Hugging Face Hub, public</td><td><code>Qwen/Qwen2.5-7B-Instruct</code></td><td>No license click needed. Easiest place to start.</td></tr>
+<tr><td>Hugging Face Hub, gated</td><td><code>meta-llama/Llama-3.1-8B-Instruct</code>, <code>google/gemma-2-9b-it</code></td><td>Open the model page, accept the license and wait for approval (minutes to a day). Your token must belong to the account that was approved.</td></tr>
+<tr><td>Meta direct (llama.com)</td><td>Signed download URL → local folder</td><td>Use the HF version instead unless you have a reason not to. The direct download comes in Meta's own format and has to be converted to HF format first.</td></tr>
+<tr><td>ModelScope (China mirror)</td><td><code>modelscope download --model qwen/Qwen2.5-7B-Instruct --local_dir ./m</code></td><td>Same weights. Useful when HF is slow or blocked. Pass the local folder to the pipeline.</td></tr>
+<tr><td>Your own fine-tune / private model</td><td><code>/workspace/models/my-model</code> (folder)</td><td>The folder must contain <code>config.json</code>, <code>*.safetensors</code> (or <code>pytorch_model*.bin</code>, which gets auto-converted) and the tokenizer files. Upload it with WinSCP or push it to a <b>private</b> HF repo.</td></tr>
+<tr><td>Ollama / LM Studio / GGUF</td><td>Not a valid source</td><td>Find the original HF repo the GGUF was made from and use that.</td></tr>
+</table>
+
+<h2>3.2 Read the model card in 60 seconds</h2>
+<p>Open <code>config.json</code> on the model page (Files tab). These are the fields that decide your hardware:</p>
+<table>
+<tr><th>Field</th><th>Meaning in plain words</th><th>Llama-3.1-8B</th></tr>
+<tr><td><code>num_hidden_layers</code> (L)</td><td>How many repeated blocks. The pipeline processes them one at a time.</td><td>32</td></tr>
+<tr><td><code>hidden_size</code> (h)</td><td>Width of the token vector.</td><td>4096</td></tr>
+<tr><td><code>intermediate_size</code> (I)</td><td>Width inside the MLP. Usually the biggest activation.</td><td>14336</td></tr>
+<tr><td><code>num_key_value_heads</code>, <code>head_dim</code></td><td>Decide the KV-cache size at inference.</td><td>8, 128</td></tr>
+<tr><td><code>vocab_size</code>, <code>tie_word_embeddings</code></td><td>Embedding / output head size. These stay 16-bit.</td><td>128256, false</td></tr>
+<tr><td><code>num_experts</code> / <code>n_routed_experts</code>, <code>num_experts_per_tok</code>, <code>moe_intermediate_size</code></td><td>Present only for MoE models.</td><td>(dense)</td></tr>
+<tr><td><code>torch_dtype</code>, <code>quantization_config</code></td><td>bf16/fp16 is good. fp8 is OK (dequantized on load). If it already says gptq/awq/bnb, stop: wrong source.</td><td>bfloat16</td></tr>
+</table>
+
+<h2>3.3 Compatibility gate (run before renting anything)</h2>
+<pre class="cmd"><span class="c"># runs on your laptop, CPU only, downloads ~10 KB of metadata (config + safetensors headers), no weights</span>
+python scripts/01_inspect_model.py --model meta-llama/Llama-3.1-8B-Instruct</pre>
+<p>It prints the exact parameter count (read from the safetensors headers), architecture, dense/MoE, checkpoint dtype, the number of quantizable Linears, a PASS/FAIL compatibility verdict and the full hardware table from Section 4. <b>If it says FAIL, don't rent a GPU.</b></p>
+
+<h2>3.4 Your own (non-HF) PyTorch model</h2>
+<p>AWQ needs three things: the model, a list of the repeated blocks, and a way to feed it calibration inputs. You give it those in one small Python file:</p>
+<pre><span class="c"># my_plugin.py: the pipeline imports this when you pass --plugin my_plugin.py</span>
+def load():                      # return (model, tokenizer_or_None)
+    ...
+def blocks(model):               # return the nn.ModuleList of repeated blocks
+    return model.transformer.layers
+def calib_batches(tokenizer, n, seq_len):   # yield model inputs (dicts or tensors)
+    ...</pre>
+<div class="box truth"><b class="tag">BRUTAL TRUTH</b> If most of your model's compute isn't <code>nn.Linear</code> (for example a convolution-heavy model), AWQ is the wrong tool.</div>
+
+<!-- ============================ 4 ============================ -->
+<h1>4. Step 2: Size the hardware</h1>
+<p>You need three answers: <b>which GPU</b>, <b>how many</b>, and <b>for how long</b>, and you need them separately for the three phases. They have very different needs:</p>
+<table>
+<tr><th>Phase</th><th>What sits in VRAM</th><th>Driven by</th></tr>
+<tr><td>A. Quantize</td><td>One decoder block + calibration activations for that block</td><td>Largest block size, <code>n_samples × seq_len</code>, MLP width</td></tr>
+<tr><td>B. FP16 baseline eval</td><td>The whole model in 16-bit + eval activations</td><td>Total parameters × 2 bytes</td></tr>
+<tr><td>C. Evaluate / serve AWQ</td><td>The whole model in 4-bit + KV cache</td><td>Total parameters × ~0.52 bytes + context length</td></tr>
+</table>
+
+<h2>4.1 Option A: AI-assisted (paste this prompt)</h2>
+<p>Paste this into ChatGPT, Claude, Gemini or any assistant that can browse. Replace the first line. If it can't open links, paste the model's <code>config.json</code> under the prompt.</p>
+<pre>MODEL: &lt;paste Hugging Face link or model id here&gt;
+
+You are a GPU capacity planner. I will quantize this model to 4-bit AWQ
+(group size 128, asymmetric) with a block-by-block pipeline: only ONE decoder
+block plus its calibration activations is on the GPU at a time.
+Calibration = 128 samples x 512 tokens. Usable VRAM = 90% of nominal.
+
+1. Read config.json (and model.safetensors.index.json if present). QUOTE these
+   values, do not estimate them: architecture, total parameters, dense or MoE
+   (num experts, experts per token, moe_intermediate_size), num_hidden_layers,
+   hidden_size, intermediate_size, num_key_value_heads, head_dim, vocab_size,
+   tie_word_embeddings, checkpoint dtype (bf16/fp16/fp8), max context length,
+   whether trust_remote_code is required.
+2. Show the arithmetic for:
+   a) FP16 size = params x 2 bytes
+   b) AWQ size = quantized-linear params x 0.52 bytes + embeddings/lm_head x 2 bytes
+   c) Largest decoder block in FP16 (all experts included for MoE)
+   d) Quantize-phase VRAM = 2 x block + 6 x 128 x 512 x max(I, top_k x moe_I) bytes + 2 GB
+   e) FP16-baseline-eval VRAM = FP16 size x 1.2
+   f) AWQ serving VRAM at 8192 context, batch 1 = AWQ size + KV cache + 15%
+      where KV = 2 x layers x kv_heads x head_dim x 8192 x 2 bytes
+   g) Disk = download size + AWQ size + 20 GB;  CPU RAM >= 3 x block + 2 x calib act + 8 GB
+   NOTE: quantize phase = exactly ONE GPU; serving with vLLM = 1, 2, 4 or 8 GPUs.
+3. For each phase pick GPU type AND count from: RTX 4090 24GB, L40S 48GB,
+   A100 80GB, H100 80GB, H200 141GB, B200 180GB.  count = ceil(VRAM / usable).
+4. Estimate wall time: quantize ~= 3 min per billion params on A100-class
+   (x1.5 on RTX 4090), plus download at 200 MB/s, plus 30 min setup/eval.
+   Estimate cost with these $/GPU-hour: RTX4090 0.34, L40S 0.79, A100 1.19,
+   H100 1.99, H200 3.59, B200 5.98 (RunPod community, Oct 2026).
+5. List anything that breaks a standard AutoModelForCausalLM pipeline
+   (custom code, FP8 weights, multimodal, MoE, already-quantized weights).
+Output: one table per phase + a final "rent this" line. If you could not read
+the files, say so instead of guessing.</pre>
+<div class="box warn"><b class="tag">VERIFY</b> Run <code>python scripts/01_inspect_model.py --model &lt;id&gt;</code> and compare. If the AI's parameter count or VRAM differs by more than 10%, trust the script. The script reads the real tensor shapes.</div>
+
+<h2>4.2 Option B: Manual formula (pen and paper)</h2>
+<pre>P      = total parameters (billions)            ← model card / 01_inspect_model.py
+P_emb  = vocab x hidden (x2 if lm_head is NOT tied) / 1e9
+P_lin  = P - P_emb                               ← the part AWQ quantizes
+L, h, I, top_k, I_moe                            ← config.json
+
+FP16 size (GB)          = 2 x P
+AWQ size  (GB)          = 0.52 x P_lin + 2 x P_emb      (4 bits + scale/zero per 128 weights ≈ 4.16 bits)
+Block (GB)              = 2 x P_lin / L                  (for MoE: count ALL experts in one layer)
+Calib act (GB)          = n_samples x seq_len x max(I, top_k x I_moe) x 2 / 1e9
+
+VRAM quantize (GB)      = 2 x Block + 6 x Calib act + 2
+VRAM FP16 eval (GB)     = 1.2 x FP16 size
+KV cache (GB)           = 2 x L x kv_heads x head_dim x context x batch x 2 / 1e9
+VRAM serve AWQ (GB)     = 1.15 x (AWQ size + KV cache)
+
+# GPUs for a phase      = ceil( VRAM_phase / (0.9 x VRAM of one GPU) )
+Disk (GB)               = download size + AWQ size + 20
+CPU RAM (GB)            ≥ max(16, 3 x Block + 2 x Calib act + 8)     (streaming loader)
+# Phase A uses ONE GPU (a block is never split across cards). Phase C (vLLM) uses 1, 2, 4 or 8 GPUs.
+Hours (estimate)        ≈ P x 3 min / 60  (A100-class; x1.5 RTX 4090)  + download + 0.5
+Cost                    = Σ phases ( #GPUs x $/GPU-hr x hours ) x 1.25   (setup + idle margin)</pre>
+<div class="box note"><b class="tag">ESTIMATE</b> The "3 min per billion parameters" speed is my estimate for this pure-PyTorch implementation with clip search on. The first real GPU run calibrates it, and v1.0 of this PDF will carry the measured value.</div>
+
+<h2 class="keep">4.3 Worked example: Llama-3.1-8B</h2>
+<pre>P = 8.03   P_emb = 128256 x 4096 x 2 / 1e9 = 1.05   P_lin = 6.98   L = 32   I = 14336
+FP16 size        = 16.1 GB
+AWQ size         = 0.52 x 6.98 + 2 x 1.05 = 3.63 + 2.10 = 5.7 GB      (2.8x smaller on disk)
+Block            = 2 x 6.98 / 32 = 0.44 GB
+Calib act        = 128 x 512 x 14336 x 2 / 1e9 = 1.88 GB
+VRAM quantize    = 0.88 + 11.3 + 2 = ~14 GB     → 1x RTX 4090 24 GB
+VRAM FP16 eval   = 1.2 x 16.1 = 19.3 GB         → 1x RTX 4090 (tight) or 1x L40S 48 GB (safe)
+KV @ 8k          = 2 x 32 x 8 x 128 x 8192 x 2 / 1e9 = 1.07 GB
+VRAM serve AWQ   = 1.15 x (5.7 + 1.07) = 7.8 GB → fits a 12 GB consumer card
+Disk             = 16.1 + 5.7 + 20 = ~42 GB  (rent a 60–80 GB volume for headroom)
+Time / cost      = ~2–3 h on 1x RTX 4090 @ $0.34–0.89/h  →  ≈ $1–3</pre>
+
+<div class="keep"><h2>4.4 The decision map (generated by 01_inspect_model.py from real configs)</h2>
+<!--GEN:DECISION-->
+<p class="small">Generated from <code>proof/hardware_reports/*.json</code> (exact parameter counts from each model's real config). Cost and hours are ESTIMATES at RunPod community prices; the quantize-speed constant (3 min per billion params on an A100) is uncalibrated until a GPU run. "FP16 eval: multi-node" means the 16-bit baseline does not fit one 8-GPU node: use <code>--skip-fp16</code> and compare against published scores.</p></div>
+
+<!-- ============================ 5 ============================ -->
+<h1>5. Step 3: Accounts, tokens and model access</h1>
+<h2>5.1 Hugging Face token</h2>
+<ol>
+<li>Create an account at <code>huggingface.co/join</code> and verify your email.</li>
+<li>Go to <b>Settings → Access Tokens → Create new token</b>.
+  <ul><li><b>Read</b> token: enough to download, including gated models you've been approved for.</li>
+  <li><b>Write</b> token (or fine-grained with "write to repos under your namespace"): needed only for Step 11 upload.</li></ul></li>
+<li>Gated models (Llama, Gemma, some Mistral): open the model page → fill in the form → <b>Agree and access repository</b>. Wait for "You have been granted access".</li>
+</ol>
+<pre class="cmd"><span class="c"># on the GPU server (each new pod has its own home folder, so log in again there)</span>
+pip install -U "huggingface_hub[cli]"
+hf auth login                       <span class="c"># paste the token; answer 'n' to git credential</span>
+hf auth whoami                      <span class="c"># must print your username</span>
+<span class="c"># non-interactive alternative (scripts / CI):</span>
+export HF_TOKEN=hf_xxxxxxxxxxxxxxxxx</pre>
+<div class="box warn"><b class="tag">SECURITY</b> Never paste the token into code, <code>configs/*.yaml</code> or a notebook you commit. The repo's <code>.gitignore</code> blocks <code>.env</code>. Revoke the token after the project if you shared the machine.</div>
+
+<h2>5.2 Download the weights (to the volume, not the container disk)</h2>
+<pre class="cmd">export HF_HOME=/workspace/hf_cache              <span class="c"># cache on the persistent volume</span>
+hf download meta-llama/Llama-3.1-8B-Instruct \
+   --local-dir /workspace/models/llama-3.1-8b-instruct \
+   --include "*.json" "*.safetensors" "tokenizer*"
+du -sh /workspace/models/llama-3.1-8b-instruct   <span class="c"># ≈ FP16 size from Section 4</span></pre>
+<table>
+<tr><th>Error</th><th>Cause → fix</th></tr>
+<tr><td><code>401 / GatedRepoError</code></td><td>License not accepted, or the token is from a different account. Accept the license, wait, then run <code>hf auth whoami</code>.</td></tr>
+<tr><td><code>No space left on device</code></td><td>You downloaded to the container disk. Set <code>HF_HOME</code> and <code>--local-dir</code> under <code>/workspace</code>.</td></tr>
+<tr><td>Very slow</td><td><code>pip install -U hf_xet</code> (fast transfer backend). Large models: start the download first, in tmux, while you set up everything else.</td></tr>
+</table>
+
+<h2>5.3 Your own model from your laptop</h2>
+<p>Either drag the folder to <code>/workspace/models/</code> with WinSCP (Section 7.4), or push it privately and download it on the pod:</p>
+<pre class="cmd">hf upload &lt;you&gt;/my-model ./my-model . --private     <span class="c"># from laptop</span>
+hf download &lt;you&gt;/my-model --local-dir /workspace/models/my-model   <span class="c"># on pod</span></pre>
+
+<!-- ============================ 6 ============================ -->
+<h1>6. Step 4: Rent the GPU</h1>
+<h2>6.1 Price sheet (on-demand, USD per GPU-hour, checked Oct 2026)</h2>
+<table>
+<tr><th>Provider</th><th>RTX 4090 24G</th><th>L40S 48G</th><th>A100 80G</th><th>H100 80G</th><th>H200 141G</th><th>B200 180G</th><th>Notes</th></tr>
+<tr><td><b>RunPod</b> (community / secure)</td><td>0.34 / 0.89</td><td>0.79 / 1.09</td><td>1.19–1.39 / 1.79</td><td>1.99 PCIe, 2.69 SXM / 2.89–3.99</td><td>3.59 / 5.29</td><td>5.98 / 7.99</td><td>Per-second billing. Volume $0.10/GB/mo running, $0.20 idle. Cheapest smooth option. Page updated 8 Oct 2026.</td></tr>
+<tr><td><b>Vast.ai</b> (marketplace)</td><td>~0.14–0.40</td><td>varies</td><td>~0.80–1.50</td><td>from ~1.47</td><td>varies</td><td>varies</td><td>Cheapest, but host quality varies. Filter by reliability above 98% and a verified badge. Interruptible = cheapest and can be killed.</td></tr>
+<tr><td><b>Hyperstack</b></td><td>—</td><td>L40 1.00</td><td>1.35 PCIe / 1.60 SXM</td><td>1.90 PCIe / 2.40 SXM</td><td>check</td><td>check</td><td>Per-minute billing. VM with user <code>ubuntu</code>. Attach a public IP and open port 22. Use only <code>hyperstack.cloud</code> (a fake clone site exists).</td></tr>
+<tr><td><b>Lambda</b></td><td>—</td><td>—</td><td>2.79 (SXM)</td><td>3.29 PCIe / 3.99 SXM</td><td>—</td><td>6.69</td><td>Reliable, no egress fees, drivers preinstalled. Prices went up in 2025–26.</td></tr>
+<tr><td><b>Jarvislabs</b></td><td>—</td><td>—</td><td>1.49</td><td>2.69–2.99</td><td>—</td><td>—</td><td>Per-minute billing, INR billing. India-friendly.</td></tr>
+<tr><td><b>E2E Networks</b> (India)</td><td>—</td><td>from ₹49/h*</td><td>≈ ₹180–250/h</td><td>₹362/h (official)</td><td>check</td><td>—</td><td>INR, <b>+18% GST</b>. Data centres in Delhi NCR and Chennai. *Entry price is for lower-tier GPUs.</td></tr>
+<tr><td><b>AWS / GCP / Azure</b></td><td>—</td><td>—</td><td>—</td><td>~$3–12 per GPU-hr</td><td>—</td><td>—</td><td>Mostly sold as 8-GPU nodes. Only worth it if you have credits or an employer account.</td></tr>
+<tr><td><b>Colab / Kaggle</b></td><td colspan="6">Free T4 16 GB (session-limited)</td><td>Good for ≤3B models and for learning the pipeline at $0.</td></tr>
+</table>
+<p class="small">Sources: runpod.io/gpu-cloud/pricing (8 Oct 2026); hyperstack.cloud/pricing; Lambda list prices via usagepricing.com (Jun 2026); Vast.ai via costbench.com and hostinger.com (Sep 2026); jarvislabs.ai blog; e2enetworks.com H100 page. Third-party trackers disagree. Treat every figure as indicative and check the live page before you rent.</p>
+
+<h2>6.2 Which provider, honestly</h2>
+<ul>
+<li><b>Default:</b> RunPod community cloud. Cheap, per-second billing, a PyTorch template with drivers ready, persistent volumes, and an easy SSH + SFTP setup. Use <b>secure</b> cloud for long 70B+ runs where getting interrupted costs more than the price difference.</li>
+<li><b>Lowest price, and you'll babysit it:</b> Vast.ai. Check the host's disk speed and network before you start a large download.</li>
+<li><b>A real VM with root and stable IPs:</b> Hyperstack or Lambda.</li>
+<li><b>Paying in INR / GST invoice:</b> E2E Networks or Jarvislabs.</li>
+<li><b>400B–1T:</b> you need a provider with H200/B200 nodes and multi-TB volumes: RunPod (secure), Lambda or Hyperstack. Ask about volume size limits <i>before</i> renting.</li>
+</ul>
+
+<h2>6.3 Renting on RunPod (reference walkthrough)</h2>
+<ol>
+<li>runpod.io → Billing → add $10–25 credit (set a <b>spending limit</b>).</li>
+<li>Settings → SSH Public Keys → paste your public key (Section 7.1).</li>
+<li>Pods → Deploy → choose the GPU and count from the decision map → template <b>RunPod PyTorch</b> (CUDA 12.8+).</li>
+<li>Edit template: Container disk 30 GB. <b>Volume disk</b> = Disk from Section 4 (e.g. 80 GB for 8B, 250 GB for 70B), mounted at <code>/workspace</code>. Expose TCP port 22.</li>
+<li>Deploy → wait for RUNNING → <b>Connect</b> → copy the <b>"SSH over exposed TCP"</b> command (it has a public IP and a port).</li>
+</ol>
+<div class="box warn"><b class="tag">IMPORTANT</b> RunPod's basic proxied SSH (<code>ssh xxx@ssh.runpod.io</code>) does <b>not</b> support SFTP/SCP, so <b>WinSCP will fail</b> with it. Use "SSH over exposed TCP" (public IP + port).</div>
+
+<!-- ============================ 7 ============================ -->
+<h1>7. Step 5: Connect</h1>
+<h2>7.1 Create an SSH key (one time, on your laptop)</h2>
+<pre class="cmd"><span class="c"># Windows PowerShell (also works on macOS/Linux terminal)</span>
+ssh-keygen -t ed25519 -C "kashyap-gpu"          <span class="c"># press Enter for default path; set a passphrase</span>
+type $env:USERPROFILE\.ssh\id_ed25519.pub       <span class="c"># Windows: print PUBLIC key → paste into provider</span>
+cat ~/.ssh/id_ed25519.pub                       <span class="c"># macOS/Linux equivalent</span></pre>
+<p>The <b>.pub</b> file is public, so paste it into the provider. The file <b>without</b> .pub is your private key. Never share it or upload it anywhere.</p>
+
+<h2>7.2 First connection (terminal)</h2>
+<pre class="cmd">ssh -i ~/.ssh/id_ed25519 root@&lt;PUBLIC_IP&gt; -p &lt;PORT&gt;     <span class="c"># RunPod / Vast: user root</span>
+ssh -i ~/.ssh/id_ed25519 ubuntu@&lt;PUBLIC_IP&gt;              <span class="c"># Lambda / Hyperstack: user ubuntu, port 22</span>
+nvidia-smi                                               <span class="c"># you should see your GPU(s)</span></pre>
+
+<h2>7.3 VS Code Remote-SSH (edit and run on the GPU like it's local)</h2>
+<pre><span class="c"># add to  C:\Users\&lt;you&gt;\.ssh\config   (or ~/.ssh/config)</span>
+Host awq-gpu
+    HostName &lt;PUBLIC_IP&gt;
+    Port &lt;PORT&gt;
+    User root
+    IdentityFile ~/.ssh/id_ed25519</pre>
+<p>In VS Code: install the <b>Remote - SSH</b> extension → F1 → <i>Remote-SSH: Connect to Host</i> → <code>awq-gpu</code> → Open Folder <code>/workspace</code>. The integrated terminal now runs on the GPU box.</p>
+
+<h2>7.4 WinSCP (drag-and-drop files, Windows)</h2>
+<ol>
+<li>Install WinSCP from <b>winscp.net</b> (the official site only).</li>
+<li><b>New Session</b>: File protocol <b>SFTP</b> · Host name <code>&lt;PUBLIC_IP&gt;</code> · Port <code>&lt;PORT&gt;</code> · User name <code>root</code> (or <code>ubuntu</code>).</li>
+<li><b>Advanced… → SSH → Authentication → Private key file</b> → pick <code>id_ed25519</code>. WinSCP offers to convert it to <code>.ppk</code>. Click OK and save it.</li>
+<li><b>Save</b> → <b>Login</b> → accept the host key (first time only).</li>
+<li>Left pane is your PC, right pane is the server. Go to <code>/workspace</code> on the right and drag the project folder (or your model folder) across.</li>
+<li><b>Transfer settings → Binary</b> for model files. Exclude <code>.venv</code> and <code>__pycache__</code>.</li>
+</ol>
+<div class="box warn"><b class="tag">WINDOWS GOTCHA</b> Shell scripts edited on Windows get CRLF line endings, and bash then fails with <code>/bin/bash^M: bad interpreter</code>. Fix it on the server with <code>sed -i 's/\r$//' *.sh</code>, or set VS Code's line ending to LF (bottom-right "CRLF" → "LF"). The repo ships a <code>.gitattributes</code> that forces LF.</div>
+<p><b>Mac/Linux:</b> no WinSCP. Use <code>scp -P &lt;PORT&gt; -r ./WEEK--37 root@IP:/workspace/</code> or <code>rsync -avP -e "ssh -p &lt;PORT&gt;" ./WEEK--37 root@IP:/workspace/</code>.</p>
+<div class="box note"><b class="tag">RECOMMENDED</b> For <i>code</i>, use <code>git clone</code> on the server instead of WinSCP, so the server always has the exact committed version. Use WinSCP for things that aren't in git: your own model folders, results you want back on your laptop, and quick edits.</div>
+
+<h2>7.5 tmux: jobs survive a disconnect</h2>
+<pre class="cmd">tmux new -s awq          <span class="c"># start a session and run long jobs in here</span>
+<span class="c"># detach: Ctrl+B then D        list: tmux ls        re-attach: tmux attach -t awq</span></pre>
+<div class="box truth"><b class="tag">BRUTAL TRUTH</b> If you run a 6-hour quantization in a plain SSH window and your Wi-Fi drops, the job dies. Always run it in tmux.</div>
+
+<!-- ============================ 8 ============================ -->
+<h1>8. Step 6: Install the stack</h1>
+<h2>8.1 Driver vs CUDA toolkit vs PyTorch (what you actually need)</h2>
+<table>
+<tr><th>Piece</th><th>What it is</th><th>Do you install it?</th></tr>
+<tr><td>NVIDIA driver</td><td>Lets the OS talk to the GPU. <code>nvidia-smi</code> shows it, and "CUDA Version: 12.x" in its corner = the <b>maximum</b> CUDA runtime the driver supports.</td><td><b>No</b> on RunPod, Vast, Lambda and Hyperstack GPU images. It's preinstalled. Only on a bare VM (8.4).</td></tr>
+<tr><td>CUDA runtime</td><td>The libraries PyTorch calls.</td><td><b>No.</b> They come inside the PyTorch wheel (<code>cu126</code>, <code>cu128</code>…).</td></tr>
+<tr><td>CUDA toolkit (<code>nvcc</code>)</td><td>A compiler for custom CUDA kernels.</td><td><b>No</b> for this project (pure PyTorch). Only if you build kernels from source.</td></tr>
+<tr><td>PyTorch</td><td>The framework.</td><td><b>Yes.</b> Pick a wheel whose CUDA version is ≤ what <code>nvidia-smi</code> shows. Blackwell GPUs (B200, RTX 5090, RTX Pro 6000) need <code>cu128</code> or newer.</td></tr>
+</table>
+
+<h2>8.2 Install (copy-paste, Ubuntu GPU image)</h2>
+<pre class="cmd">nvidia-smi                                         <span class="c"># 1. note GPU name + "CUDA Version"</span>
+apt-get update && apt-get install -y git tmux htop nvtop python3-venv   <span class="c"># 2. tools (sudo on VMs)</span>
+cd /workspace
+git clone https://github.com/kashyapphassan2000-netizen/WEEK--37.git    <span class="c"># 3. code</span>
+cd WEEK--37
+python3 -m venv .venv && source .venv/bin/activate                       <span class="c"># 4. isolated env</span>
+pip install -U pip wheel
+pip install torch --index-url https://download.pytorch.org/whl/cu128    <span class="c"># 5. match driver</span>
+pip install -e ".[eval]"                                                 <span class="c"># 6. project + lm-eval</span>
+python scripts/00_env_check.py                                           <span class="c"># 7. must end with ENV OK</span></pre>
+<p><code>00_env_check.py</code> prints the Python, torch and CUDA versions, GPU names and VRAM, bf16 support, free disk on <code>/workspace</code>, RAM, HF login status and a 4096×4096 matmul timing. If anything is wrong it tells you the exact fix.</p>
+
+<h2>8.3 Required software list</h2>
+<table>
+<tr><th>Package</th><th>Why</th></tr>
+<tr><td><code>torch</code> ≥ 2.4</td><td>Tensors, GPU, the model.</td></tr>
+<tr><td><code>transformers</code>, <code>accelerate</code></td><td>Model definitions, building the skeleton on the meta device.</td></tr>
+<tr><td><code>safetensors</code>, <code>huggingface_hub[cli]</code>, <code>hf_xet</code></td><td>Reading and writing weights shard by shard, download/upload.</td></tr>
+<tr><td><code>datasets</code></td><td>Calibration (pile-val, C4) and eval (WikiText-2, C4) data.</td></tr>
+<tr><td><code>pyyaml</code>, <code>tqdm</code>, <code>numpy</code></td><td>Config, progress bars, stats.</td></tr>
+<tr><td><code>lm-eval</code> (extra)</td><td>Downstream accuracy tasks.</td></tr>
+<tr><td><code>vllm</code> (optional)</td><td>Fast serving and checking the exported standard-AWQ model. Install it in a <b>separate</b> venv because it pins its own torch.</td></tr>
+<tr><td><code>pytest</code>, <code>ruff</code> (dev)</td><td>Tests and lint.</td></tr>
+</table>
+
+<h2>8.4 Bare VM with no driver (only if <code>nvidia-smi</code> is "not found")</h2>
+<pre class="cmd">sudo apt-get update && sudo apt-get install -y ubuntu-drivers-common
+sudo ubuntu-drivers list --gpgpu          <span class="c"># shows recommended server driver</span>
+sudo ubuntu-drivers install --gpgpu       <span class="c"># Hopper/Blackwell: use the "-open" server driver it suggests</span>
+sudo reboot
+nvidia-smi</pre>
+<div class="box truth"><b class="tag">BRUTAL TRUTH</b> Hand-installing drivers on a rented VM wastes an hour of paid GPU time. Pick the provider's image that already has CUDA or PyTorch.</div>
+
+<!-- ============================ 9 ============================ -->
+<h1>9. Step 7: The codebase</h1>
+<p>Everything lives at the root of the WEEK--37 repo. Each file has one job. In v1.0 of this PDF every file is printed in full with a line-by-line, plain-English explanation. This page is the map.</p>
+<pre>WEEK--37/
+├── configs/
+│   ├── run.yaml              ← THE FILE YOU EDIT (model, work_dir, knobs)
+│   ├── gpus.yaml             ← GPU catalog + prices used for sizing/cost (edit for your provider)
+│   ├── tune_space.yaml       ← tuner stages (GPU)        tune_space_cpu.yaml ← small space used for the CPU proof
+│   └── examples/             ← qwen2.5-0.5b-cpu, qwen2.5-7b, llama-3.1-8b, llama-3.3-70b, qwen3-30b-a3b-moe, deepseek-v3
+├── awq/                      ← the library
+│   ├── config.py   cli.py   utils.py
+│   ├── hardware.py           ← Section-4 formulas as code + GPU picker
+│   ├── model_io.py           ← meta skeleton, lazy safetensors reader, FP8, fused experts, load_quantized
+│   ├── blocks.py             ← blocks / quantizable Linears / experts / fold targets for ANY architecture
+│   ├── calib.py              ← calibration + eval windows (no padding)
+│   ├── quantizer.py          ← 4-bit math, pack/unpack
+│   ├── search.py             ← AWQ scale search + clip search
+│   ├── awq_linear.py         ← AwqLinear, AwqExpertsWeight
+│   ├── pipeline.py           ← block-by-block loop, checkpoints, --resume
+│   ├── evaluate.py           ← PPL, RTN baseline, generations, speed, lm-eval bridge
+│   ├── export.py             ← standard AWQ GEMM (vLLM) export + reference decoder
+│   └── plugin.py             ← your own non-transformers model
+├── scripts/  00_env_check  01_inspect_model  02_baseline  03_quantize  04_verify
+│             05_eval  06_tune  07_export  08_publish  run_all.sh
+├── tests/    30 tests (tiny Llama / Qwen2-GQA / Mixtral-MoE / custom plugin model)
+├── proof/    cpu-qwen2.5-0.5b/ (real logs + JSON), hardware_reports/, GPU_RUN_TEMPLATE.md
+└── docs/     Universal_AWQ_Playbook.pdf (this), playbook/ (source + build.py), derivation.md, blog.md</pre>
+
+<h2>9.1 How the algorithm runs (plain words)</h2>
+<ol>
+<li><b>Embed the calibration text.</b> 128 windows × 512 tokens go through the embedding layer. The result is the input to block 0.</li>
+<li><b>For each block i</b> (only this block is on the GPU):
+  <ol type="a">
+  <li>Load block i's weights from disk → GPU.</li>
+  <li>Run the block once with hooks to record the input of every Linear. Linears that receive the <i>same</i> tensor (q/k/v; gate/up; each expert's gate/up) form a <b>group</b>.</li>
+  <li>For each group: per-channel importance <code>m = mean|x|</code>. Try 20 values of α ∈ [0,1]: <code>s = m^α</code> (normalised), fake-quantize <code>W·diag(s)</code>, compute the group output with <code>x/s</code>, measure the error vs FP16. Keep the best <code>s</code>.</li>
+  <li><b>Clip search:</b> for each Linear, try shrinking the max-abs value per group (100%→50%) and keep what minimises output error. This tames outlier weights.</li>
+  <li>Fold <code>1/s</code> into the previous norm or Linear when it's known. Otherwise store <code>inv_s</code> in the layer. Then pack INT4 + scales (+ zeros).</li>
+  <li>Run the quantized block on the calibration data and log its error vs. the FP block (<code>block_rel_mse</code>). The input to block i+1 is the FP block's output (official AWQ behaviour, <code>search.propagate: fp</code>), or the quantized output (<code>propagate: quantized</code>, GPTQ-style, a tuning knob). Save a checkpoint, free the GPU, move on.</li>
+  </ol></li>
+<li>Write <code>model.safetensors</code> shards + <code>quant_config.json</code> + a copy of the tokenizer and config.</li>
+</ol>
+
+<h2>9.2 The single config file</h2>
+<pre><span class="c"># configs/run.yaml</span>
+model: Qwen/Qwen2.5-7B-Instruct      <span class="c"># HF id OR local folder (/workspace/models/my-model)</span>
+revision: main
+trust_remote_code: false             <span class="c"># true only for models that ship their own code (DeepSeek, Kimi…)</span>
+dtype: bfloat16                      <span class="c"># compute dtype during calibration (float32 on CPU)</span>
+device: cuda                         <span class="c"># cuda | cpu</span>
+quant:
+  w_bit: 4
+  group_size: 128                    <span class="c"># 128 standard; 64 = more accurate, ~3% bigger</span>
+  zero_point: true                   <span class="c"># asymmetric (standard AWQ); false = symmetric</span>
+  skip_modules: []                   <span class="c"># names kept 16-bit; routers are skipped automatically</span>
+search:
+  n_grid: 20                         <span class="c"># alpha points in [0,1]</span>
+  clip: true
+  clip_grid: 20
+  max_shrink: 0.5
+calib:
+  dataset: pileval                   <span class="c"># pileval | c4 | wikitext | /path/to/your.jsonl  ({"text": ...} per line)</span>
+  n_samples: 128
+  seq_len: 512
+eval:
+  ppl_datasets: [wikitext2, c4]
+  ppl_seq_len: 2048
+  lm_eval_tasks: [arc_easy, arc_challenge, hellaswag, piqa, winogrande]
+io:
+  work_dir: /workspace/runs/qwen2.5-7b-awq
+seed: 42</pre>
+
+<!-- ============================ 10 ============================ -->
+<h1>10. Step 8: Transfer and run</h1>
+<pre class="cmd"><span class="c"># ── on the GPU server, inside tmux, venv active ─────────────────────────────</span>
+cd /workspace/WEEK--37 && git pull                              <span class="c"># or WinSCP the folder</span>
+cp configs/examples/llama-3.1-8b.yaml configs/run.yaml           <span class="c"># edit model / work_dir</span>
+
+python scripts/00_env_check.py                                   <span class="c"># gate 0: ENV OK</span>
+python scripts/01_inspect_model.py --config configs/run.yaml    <span class="c"># gate 1: COMPATIBLE + fits</span>
+python scripts/02_baseline.py      --config configs/run.yaml    <span class="c"># FP16 + naive RTN PPL → baseline.json</span>
+python scripts/03_quantize.py      --config configs/run.yaml    <span class="c"># AWQ block by block (resumable)</span>
+python scripts/04_verify.py        --config configs/run.yaml    <span class="c"># gate 4: logits close, real VRAM, size</span>
+python scripts/05_eval.py          --config configs/run.yaml    <span class="c"># PPL + lm-eval + generation + speed</span>
+python scripts/06_tune.py          --config configs/run.yaml    <span class="c"># optional: improve accuracy</span>
+python scripts/07_export.py        --config configs/run.yaml --format native,autoawq
+python scripts/08_publish.py       --config configs/run.yaml --repo &lt;you&gt;/Llama-3.1-8B-AWQ --private
+
+<span class="c"># or everything 00→05 in one go, stopping at the first failed gate:</span>
+bash scripts/run_all.sh configs/run.yaml 2>&1 | tee run.log</pre>
+
+<table>
+<tr><th>Script</th><th>Produces (in <code>work_dir</code>)</th><th>Pass gate</th></tr>
+<tr><td>00_env_check</td><td><code>env.json</code></td><td>GPU visible, torch.cuda OK, disk ≥ Section-4 estimate, HF login OK</td></tr>
+<tr><td>01_inspect_model</td><td><code>model_report.json</code></td><td>Compatible = true. Phase-A VRAM fits the GPU you rented.</td></tr>
+<tr><td>02_baseline</td><td><code>baseline.json</code></td><td>Finite FP16 PPL in the published ballpark. RTN PPL &gt; FP16 PPL.</td></tr>
+<tr><td>03_quantize</td><td><code>quantized/</code>, <code>search_log.jsonl</code></td><td>Every block written. No NaN/Inf. Per-block error logged.</td></tr>
+<tr><td>04_verify</td><td><code>verify.json</code></td><td>Every packed layer decodes to finite numbers. Next-token agreement with the original on 10 probe prompts ≥ 75%. On-disk size within 15% of the formula for the dtype you ran in (FP32 on CPU, 16-bit on GPU).</td></tr>
+<tr><td>05_eval</td><td><code>results.json</code>, <code>generations.md</code></td><td>Section 11 gates.</td></tr>
+</table>
+<div class="box note"><b class="tag">RESUME</b> If the pod dies mid-run: start a new pod, attach the <b>same volume</b> and run <code>03_quantize.py --resume</code>. It continues from the last finished block.</div>
+
+<!-- ============================ 11 ============================ -->
+<h1>11. Step 9: Evaluation</h1>
+<h2>11.1 What gets measured</h2>
+<table>
+<tr><th>Metric</th><th>How</th><th>Why</th></tr>
+<tr><td>Perplexity WikiText-2 (test)</td><td>Non-overlapping 2048-token windows</td><td>The standard number every paper reports. Lower is better.</td></tr>
+<tr><td>Perplexity C4 (validation subset)</td><td>256 × 2048 tokens</td><td>A second domain, so you don't over-trust one dataset.</td></tr>
+<tr><td>Downstream accuracy</td><td><code>lm-eval</code>: ARC-e/c, HellaSwag, PIQA, Winogrande (+ MMLU optional). The in-memory model is handed to lm-eval directly, so the native format works too.</td><td>Real task quality, not just next-token loss.</td></tr>
+<tr><td>Generation diff</td><td>20 fixed prompts, greedy, FP16 vs AWQ side by side → <code>generations.md</code></td><td>Catches failures that metrics hide (repetition, language switching).</td></tr>
+<tr><td>Your task</td><td>Optional <code>eval.custom_jsonl</code> with prompt/expected</td><td>The only metric that matters for your use case.</td></tr>
+<tr><td>Size on disk, peak VRAM, tokens/s</td><td>Meta-device load, reset peak stats; timed generate</td><td>The reason you quantized in the first place.</td></tr>
+</table>
+
+<h2>11.2 Pass / fail gates</h2>
+<table>
+<tr><th>Model size</th><th>PPL gap vs FP16 (WikiText-2)</th><th>Avg downstream accuracy drop</th><th>Also required</th></tr>
+<tr><td>≤ 3B</td><td>≤ 10%</td><td>≤ 3 points</td><td rowspan="3">AWQ PPL &lt; naive RTN PPL. No empty generations in <code>generations.md</code>. (Memory saving is reported, not gated: small models with big vocabularies keep a large 16-bit embedding, so they only shrink ~2×. 7B+ models shrink ~2.8–3.8×.)</td></tr>
+<tr><td>7–34B</td><td>≤ 5%</td><td>≤ 1.5 points</td></tr>
+<tr><td>≥ 70B</td><td>≤ 3%</td><td>≤ 1 point</td></tr>
+</table>
+<div class="box truth"><b class="tag">BRUTAL TRUTH</b> If AWQ doesn't beat naive RTN, there's a bug (usually scales on the wrong axis, or <code>1/s</code> not applied). Don't tune, debug. If it beats RTN but misses the gate, go to Section 12.</div>
+<div class="box note"><b class="tag">≥400B / 1T</b> There's no FP16 baseline (too expensive). The gate becomes per-block reconstruction error (logged in <code>search_log.jsonl</code>) plus lm-eval scores within 1–2 points of the model's <b>published</b> scores, with a note on the method in the model card.</div>
+
+<!-- ============================ 12 ============================ -->
+<h1>12. Step 10: Hyperparameter tuning</h1>
+<p>There's no training in AWQ. The "hyperparameters" are the quantization and calibration knobs. Tuning shrinks the gap to FP16 and can never beat FP16. Each trial costs one full quantize + short eval, so tune in stages. Don't brute-force everything at once.</p>
+<table>
+<tr><th>Knob</th><th>Values tried</th><th>Typical effect</th><th>Cost</th></tr>
+<tr><td><code>calib.dataset</code></td><td>pileval, c4, <b>your domain data</b></td><td>The biggest win when your use case is narrow (code, legal, Hindi…). Calibrate on what you'll serve.</td><td>none</td></tr>
+<tr><td><code>quant.group_size</code></td><td>128 → 64 → 32</td><td>Smaller groups are more accurate. 64 usually recovers a good part of the gap.</td><td>+3% / +9% size</td></tr>
+<tr><td><code>quant.zero_point</code></td><td>true / false</td><td>Asymmetric is usually better. Symmetric is simpler.</td><td>tiny</td></tr>
+<tr><td><code>calib.n_samples × seq_len</code></td><td>128×512 → 256×512 → 128×2048</td><td>Small gains. Helps long-context models.</td><td>more VRAM/time</td></tr>
+<tr><td><code>search.n_grid</code></td><td>20 → 40</td><td>Marginal.</td><td>2× search time</td></tr>
+<tr><td><code>search.clip</code>, <code>max_shrink</code></td><td>on/off, 0.5 → 0.3</td><td>Clip on is almost always better.</td><td>+30% time</td></tr>
+<tr><td><code>quant.skip_modules</code></td><td>keep the worst k Linears in 16-bit (from <code>search_log.jsonl</code>), often first/last block's <code>down_proj</code></td><td>Targeted fix for a few sensitive layers.</td><td>+size per layer</td></tr>
+<tr><td><code>search.propagate</code></td><td>fp / quantized</td><td>quantized = later blocks see (and compensate for) earlier rounding errors.</td><td>none</td></tr>
+<tr><td><code>quant.fold_scales</code></td><td>auto / never</td><td>never = also scale groups that cannot fold (e.g. GQA o_proj), so a bit more accurate. But native format only: no vLLM export.</td><td>tiny runtime cost</td></tr>
+</table>
+<h2>12.1 Protocol (strict)</h2>
+<ol>
+<li>Tuning metric = PPL on a <b>held-out</b> slice (C4 validation windows not used anywhere else). <b>Never</b> WikiText-2 test or lm-eval.</li>
+<li>Stage 1: calibration dataset → Stage 2: group size → Stage 3: samples/length → Stage 4: skip-layers. Carry the winner forward each time.</li>
+<li>Stop when the gate in 11.2 is met, or after 3 trials in a row that improve less than 0.5%.</li>
+<li>Run the final eval (11.1) <b>once</b> on the winner.</li>
+</ol>
+<pre class="cmd">python scripts/06_tune.py --config configs/run.yaml --space configs/tune_space.yaml --budget-hours 3
+<span class="c"># writes tuning/leaderboard.csv  and  configs/run.best.yaml</span></pre>
+
+<!-- ============================ 13 ============================ -->
+<h1>13. Step 11: Export, give back, shut down</h1>
+<h2>13.1 Formats</h2>
+<table>
+<tr><th>Format</th><th>Loads in</th><th>When</th></tr>
+<tr><td><b>native</b>: our <code>AwqLinear</code> safetensors + <code>quant_config.json</code></td><td>This repo (<code>awq.load_quantized()</code>), any architecture</td><td>Always produced. Works for every model the pipeline can quantize.</td></tr>
+<tr><td><b>autoawq</b> (standard AWQ "GEMM": int32 <code>qweight</code>/<code>qzeros</code>, fp16 <code>scales</code>, <code>quantization_config</code> in config.json)</td><td>vLLM, SGLang (fast AWQ-Marlin kernels). The layout is verified bit-exact against a reference decoder; actually loading it in vLLM is the first thing to do on your GPU box (not done here: no GPU).</td><td>Families where <code>1/s</code> can be folded (Llama, Mistral, Mixtral, Qwen2/2.5/3 + MoE, Gemma, Phi-3). The script refuses with a clear message otherwise.</td></tr>
+</table>
+<pre class="cmd">python scripts/07_export.py --config configs/run.yaml --format native,autoawq
+<span class="c"># check the standard export with a real serving engine (separate venv):</span>
+python -m venv /workspace/vllm-env && source /workspace/vllm-env/bin/activate && pip install vllm
+vllm serve /workspace/runs/llama-3.1-8b-awq/export/autoawq --quantization awq_marlin --max-model-len 8192
+curl localhost:8000/v1/completions -H "Content-Type: application/json" \
+     -d '{"model":"/workspace/runs/llama-3.1-8b-awq/export/autoawq","prompt":"The capital of France is","max_tokens":16}'</pre>
+
+<h2>13.2 Give it back</h2>
+<pre class="cmd">hf upload &lt;you&gt;/Llama-3.1-8B-AWQ /workspace/runs/llama-3.1-8b-awq/export/autoawq . --private
+<span class="c"># 08_publish.py does the same + writes a model card with ONLY measured numbers from results.json</span></pre>
+<p>Or pull it to your laptop: in WinSCP, right pane <code>/workspace/runs/…/export</code> → drag it to the left pane. Also copy <code>results.json</code>, <code>generations.md</code>, <code>search_log.jsonl</code> and <code>run.log</code> into the repo's <code>proof/</code> folder.</p>
+<div class="box warn"><b class="tag">LICENSES</b> A quantized model is a derivative. Llama keeps the Llama license (keep "Built with Llama" and the license file), Gemma keeps Gemma terms, Apache-2.0 stays Apache-2.0. <code>08_publish.py</code> copies the base model's license into the repo.</div>
+
+<h2>13.3 Shut down (do this every time)</h2>
+<ol>
+<li>Confirm the artifacts are on HF (open the repo page and check the files) or on your laptop (WinSCP).</li>
+<li><b>Stop</b> the pod. Compute billing stops, but the volume still bills (RunPod idle volume costs $0.20/GB/month).</li>
+<li><b>Terminate/Delete</b> the pod and the volume when you're done. Check the billing page shows $0/hr.</li>
+<li>Revoke the HF write token if it was only for this job.</li>
+</ol>
+
+<!-- ============================ 14 ============================ -->
+<h1>14. Proof of work: what lands in GitHub</h1>
+<table>
+<tr><th>Evidence</th><th>Where</th><th>Honest scope</th></tr>
+<tr><td>Full source with plain-English docstrings</td><td><code>awq/</code>, <code>scripts/</code></td><td>Written by me and reviewed against the AWQ paper.</td></tr>
+<tr><td>30 tests (pack/unpack, exact scaling identity and folding, AWQ beats RTN, end-to-end Llama/Qwen2/Mixtral/plugin, resume, export layout, sizing)</td><td><code>tests/</code>, output in <code>proof/pytest.txt</code></td><td>Run on CPU. Real output committed.</td></tr>
+<tr><td>End-to-end real run on a small real model on CPU: FP32 vs RTN vs AWQ perplexity, size, generation diff</td><td><code>proof/cpu-qwen2.5-0.5b/</code> (logs, <code>results.json</code>, <code>generations.md</code>, <code>env.json</code>, git commit hash)</td><td>Real numbers from this sandbox. Small model, CPU, so it proves correctness and the pipeline, not speed.</td></tr>
+<tr><td>Hardware report for reference models (8B, 70B, Mixtral, DeepSeek-V3, Kimi-K2 class)</td><td><code>proof/hardware_reports/</code></td><td>Generated by <code>01_inspect_model.py</code> from real config/headers. Formula output, labelled as estimates.</td></tr>
+<tr><td>GPU run (8B → 70B …)</td><td><code>proof/gpu-&lt;model&gt;/</code></td><td><b>Your run.</b> I provide <code>proof/GPU_RUN_TEMPLATE.md</code>. You paste <code>run.log</code> + <code>results.json</code>. I review the numbers when you send them.</td></tr>
+<tr><td>This playbook v1.0</td><td><code>docs/Universal_AWQ_Playbook.pdf</code>, built by <code>docs/playbook/build.py</code></td><td>Sections 4.4, 19, 20 and the Appendix are generated from the repo files, so they can't drift from the code.</td></tr>
+</table>
+<div class="box truth"><b class="tag">BRUTAL TRUTH</b> "Proof" means anyone can clone the repo, run <code>pytest</code> and <code>bash scripts/run_all.sh configs/examples/qwen2.5-0.5b-cpu.yaml</code> on a laptop and get the same numbers within noise. Screenshots aren't proof. Reproducible commands are.</div>
+
+<!-- ============================ 15 ============================ -->
+<h1>15. Troubleshooting</h1>
+<table>
+<tr><th>Symptom</th><th>Cause</th><th>Fix</th></tr>
+<tr><td><code>torch.cuda.is_available() == False</code></td><td>CPU wheel installed, or the wheel's CUDA is newer than the driver</td><td>Reinstall with <code>--index-url …/cu1xx</code> ≤ the "CUDA Version" in <code>nvidia-smi</code>.</td></tr>
+<tr><td><code>no kernel image is available for execution</code></td><td>Old torch on a Blackwell GPU</td><td>torch ≥ 2.7 with <code>cu128</code>.</td></tr>
+<tr><td>CUDA OOM in 03_quantize</td><td>Block + activations don't fit</td><td>Lower <code>calib.n_samples</code> to 64, or rent the next GPU up (Section 4). The run resumes with <code>--resume</code>.</td></tr>
+<tr><td>CUDA OOM in 02_baseline</td><td>FP16 model too big for the GPU(s)</td><td>The script uses <code>device_map=auto</code> across all GPUs. Rent more, or use <code>--skip-fp16</code> and compare against published numbers.</td></tr>
+<tr><td>Killed (no message)</td><td>Out of CPU RAM</td><td>Rent a pod with more RAM (≥ 3 × block), or make sure streaming load is on (it's the default).</td></tr>
+<tr><td>PPL = nan/inf</td><td>fp16 overflow (common on Gemma), or the wrong tokenizer</td><td><code>dtype: bfloat16</code>. Load the tokenizer from the same path as the model.</td></tr>
+<tr><td>AWQ PPL ≈ RTN PPL or worse</td><td>Scale on the wrong axis, <code>1/s</code> missing, or calibration text empty</td><td><code>pytest tests/</code>. Check that the <code>search_log.jsonl</code> alpha histogram isn't all zeros.</td></tr>
+<tr><td>Gated 401</td><td>License not accepted / wrong account token</td><td>Section 5.1.</td></tr>
+<tr><td>WinSCP "Connection refused" / "Server unexpectedly closed"</td><td>Proxied SSH (RunPod), wrong port/user, firewall</td><td>Use "SSH over exposed TCP". Check the port. User <code>ubuntu</code> on VMs. Open port 22 (Hyperstack firewall).</td></tr>
+<tr><td><code>bad interpreter: ^M</code></td><td>Windows line endings</td><td><code>sed -i 's/\r$//' scripts/*.sh</code></td></tr>
+<tr><td>vLLM refuses the export</td><td>Architecture not in the fold list, or a group size the kernel doesn't support</td><td>Use the native format, or group_size 128 / 64.</td></tr>
+<tr><td>Pod disappeared</td><td>Spot/community reclaim</td><td>Same volume → new pod → <code>--resume</code>.</td></tr>
+</table>
+
+<!-- ============================ 16 ============================ -->
+<h1>16. Command master sheet</h1>
+<pre class="cmd"><span class="c"># ── LAPTOP (once) ───────────────────────────────────────────────────────────</span>
+ssh-keygen -t ed25519 -C "gpu"                      <span class="c"># paste .pub into provider</span>
+git clone https://github.com/kashyapphassan2000-netizen/WEEK--37.git && cd WEEK--37
+python -m venv .venv && .venv\Scripts\activate       <span class="c"># mac/linux: source .venv/bin/activate</span>
+pip install -e . && python scripts/01_inspect_model.py --model &lt;MODEL&gt;   <span class="c"># sizing, no GPU</span>
+
+<span class="c"># ── RENT (Section 6) → CONNECT ──────────────────────────────────────────────</span>
+ssh -i ~/.ssh/id_ed25519 root@&lt;IP&gt; -p &lt;PORT&gt;
+tmux new -s awq
+
+<span class="c"># ── SERVER SETUP ────────────────────────────────────────────────────────────</span>
+nvidia-smi
+apt-get update && apt-get install -y git tmux htop nvtop python3-venv
+cd /workspace && git clone https://github.com/kashyapphassan2000-netizen/WEEK--37.git && cd WEEK--37
+python3 -m venv .venv && source .venv/bin/activate && pip install -U pip wheel
+pip install torch --index-url https://download.pytorch.org/whl/cu128
+pip install -e ".[eval]"
+export HF_HOME=/workspace/hf_cache && hf auth login
+python scripts/00_env_check.py
+
+<span class="c"># ── RUN ─────────────────────────────────────────────────────────────────────</span>
+cp configs/examples/&lt;closest&gt;.yaml configs/run.yaml && nano configs/run.yaml
+bash scripts/run_all.sh configs/run.yaml 2>&1 | tee run.log
+python scripts/06_tune.py   --config configs/run.yaml --space configs/tune_space.yaml   <span class="c"># optional</span>
+python scripts/07_export.py --config configs/run.yaml --format native,autoawq
+python scripts/08_publish.py --config configs/run.yaml --repo &lt;you&gt;/&lt;name&gt;-AWQ --private
+
+<span class="c"># ── GIVE BACK + SHUT DOWN ───────────────────────────────────────────────────</span>
+<span class="c"># WinSCP: drag /workspace/runs/&lt;run&gt;/{export,results.json,generations.md,run.log} → laptop</span>
+<span class="c"># provider dashboard: Stop → Terminate pod → Delete volume → billing shows $0/hr</span></pre>
+
+<!-- ============================ 17 ============================ -->
+<h1>17. Status: what is done, what is not (honest)</h1>
+<table>
+<tr><th>Item</th><th>Status</th></tr>
+<tr><td>Library (<code>awq/</code>), scripts 00–08, <code>run_all.sh</code>, configs + examples</td><td><b>Done.</b> Lint clean (ruff).</td></tr>
+<tr><td>Unit and integration tests</td><td><b>30 pass</b> on CPU (<code>proof/pytest.txt</code>): dense Llama, Qwen2 GQA + tied embeddings, Mixtral fused-MoE, custom plugin model, export, resume, sizing.</td></tr>
+<tr><td>Real-model end-to-end run</td><td><b>Done on CPU</b> with Qwen2.5-0.5B, all gates and tuning. Numbers in Section 19, including the gates it FAILED.</td></tr>
+<tr><td>GPU run at 7B / 70B</td><td><b>Not done</b>: no GPU on the build machine. It's your first rented run (≈ $1–3 for 7–8B). Template: <code>proof/GPU_RUN_TEMPLATE.md</code>.</td></tr>
+<tr><td>vLLM loading of the exported GEMM format</td><td><b>Not verified here</b> (needs a GPU). Tensor layout verified bit-exact against an independent decoder.</td></tr>
+<tr><td>MoE on real weights (Mixtral, Qwen3-MoE, DeepSeek)</td><td>Code path tested on a tiny random Mixtral only. Fused experts stay in the native format (no vLLM export).</td></tr>
+<tr><td>Kimi-K2 / other <code>trust_remote_code</code> models</td><td>Kimi-K2's own modeling code does not import under transformers 5.x, so its sizing used the formula fallback (Section 20). Quantizing it needs either its code fixed for transformers 5 or a transformers-4.x environment. Be honest with yourself: this is a multi-hundred-dollar job.</td></tr>
+<tr><td>Fast inference kernels</td><td><b>Out of scope.</b> The reference runtime dequantizes in Python and is slower than FP16. For speed, export and serve with vLLM/SGLang.</td></tr>
+</table>
+<!--GEN:CODE-->
+<!--GEN:PROOF-->
+<h1>20. Hardware reports for reference models</h1>
+<p>Produced by <code>python scripts/01_inspect_model.py --model &lt;id&gt;</code> (only <code>config.json</code> is downloaded). Full reports: <code>proof/hardware_reports/</code>. Llama models are read from the ungated <code>unsloth/</code> mirrors (same configs). Kimi-K2 used the formula fallback because its remote code does not build under transformers 5.x.</p>
+<!--GEN:HWREPORTS-->
+<!--GEN:APPENDIX-->
+</body>
+</html>

@@ -1,0 +1,13 @@
+MODEL      mistralai/Mixtral-8x22B-v0.1   [mixtral]   verdict: PASS
+PARAMS     total 140.621 B | quantizable 140.224 B (100% of block weights) | blocks 56 | MoE 8 experts, top-2
+SIZE       FP16 281.24 GB -> AWQ-4bit 73.71 GB  (3.82x)   checkpoint on disk 281.24 GB
+MEMORY     largest block 5.008 GB | calib activations 2.147 GB | KV@8192 1.879 GB | CPU RAM >= 27.3 GB | disk >= 375.0 GB
+
+PHASE           VRAM need  RENT (cheapest)            $/hr  hours*    cost*   alternatives
+A quantize         24.9 GB  1x L40S                    0.79    9.68    $9.56   1x A100 80GB ($1.19), 1x H100 80GB ($1.99), 1x H200 ($3.59)
+B FP16 eval       337.5 GB  5x A100 80GB               5.95    1.71   $12.69   8x L40S ($6.32), 5x H100 80GB ($9.95), 3x H200 ($10.77)
+C serve AWQ        86.9 GB  2x A100 80GB               2.38     0.3    $0.89   8x RTX 4090 ($2.72), 4x L40S ($3.16), 1x H200 ($3.59)
+
+* ESTIMATES. Prices: https://www.runpod.io/gpu-cloud/pricing (checked 2026-10-08). Edit configs/gpus.yaml for your provider.
+
+wrote proof/hardware_reports/mistralai_Mixtral-8x22B-v0.1.json

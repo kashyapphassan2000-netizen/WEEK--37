@@ -1,0 +1,8 @@
+# Small search space used for the CPU proof (each trial = one full quantization of Qwen2.5-0.5B on CPU).
+budget_trials: 5
+min_improvement: 0.005
+patience_stages: 3
+stages:
+  - {name: scale placement,  key: quant.fold_scales, values: [auto, never]}
+  - {name: group size,       key: quant.group_size,  values: [128, 64]}
+  - {name: propagation,      key: search.propagate,  values: [fp, quantized]}

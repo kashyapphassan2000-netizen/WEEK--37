@@ -1,0 +1,30 @@
+# PROOF RUN — CPU only, no GPU needed. This is the config used for proof/cpu-qwen2.5-0.5b/.
+# Small calibration/eval budgets so it finishes on a 4-core laptop; numbers are real but
+# a 0.5B model loses more to 4-bit than a 7B+ model does.
+model: Qwen/Qwen2.5-0.5B
+dtype: float32
+device: cpu
+quant:
+  w_bit: 4
+  group_size: 128
+  zero_point: true
+  fold_scales: auto
+search:
+  n_grid: 20
+  max_search_tokens: 8192     # subsample tokens in the scale search (CPU speed)
+  clip: true
+calib:
+  dataset: pileval
+  n_samples: 64
+  seq_len: 512
+  batch_size: 8
+eval:
+  ppl_datasets: [wikitext2, c4]
+  ppl_seq_len: 2048
+  max_windows: 20             # first 20 x 2048 = 41k tokens of each eval set (CPU budget)
+  lm_eval_tasks: [arc_easy, piqa]
+  lm_eval_limit: 300
+  lm_eval_batch_size: "8"
+  tune_max_windows: 20
+io:
+  work_dir: runs/qwen2.5-0.5b-cpu

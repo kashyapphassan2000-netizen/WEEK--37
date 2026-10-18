@@ -1,0 +1,14 @@
+# MoE example (128 experts, top-8). Experts are fused 3-D tensors in transformers >= 5 and are
+# quantized per expert natively (AwqExpertsWeight). The vLLM (GEMM) export does NOT cover fused
+# experts -> ship the native format, or set quant.quantize_experts=false for attention-only AWQ.
+model: Qwen/Qwen3-30B-A3B
+dtype: bfloat16
+device: cuda
+quant: {w_bit: 4, group_size: 128, zero_point: true, fold_scales: auto, quantize_experts: true}
+search: {n_grid: 20, clip: true}
+calib: {dataset: pileval, n_samples: 128, seq_len: 512, batch_size: 8}
+eval:
+  ppl_datasets: [wikitext2]
+  ppl_seq_len: 2048
+  lm_eval_tasks: [arc_easy, hellaswag]
+io: {work_dir: /workspace/runs/qwen3-30b-a3b-awq}

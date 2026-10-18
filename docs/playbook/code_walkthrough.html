@@ -1,0 +1,111 @@
+<h1>18. Code walkthrough: every file in plain words</h1>
+<p>This section explains what each file does, what goes in, what comes out, and why it's written that way. The complete source of every file is printed in the Appendix, and each source file also carries plain-English comments at every step. Read this section first, then the code.</p>
+
+<h2>18.1 How the pieces call each other</h2>
+<pre>scripts/03_quantize.py
+  └─ awq.config.load_config()          read configs/run.yaml (+ --set overrides), validate
+  └─ awq.pipeline.quantize_model()
+       ├─ awq.model_io.resolve_model_path()   download configs + *.safetensors (or use local folder)
+       ├─ awq.model_io.ModelSource            empty skeleton on "meta" + lazy WeightStore
+       │     └─ awq.blocks.find_blocks()      which nn.ModuleList holds the N decoder blocks
+       ├─ awq.calib.get_calib_tokens()        (n_samples, seq_len) token windows, no padding
+       ├─ capture_block0_inputs()             embeddings only, stop at block 0 (Catcher)
+       └─ for each block i:
+            ModelSource.load_block(i)         only THIS block's tensors are read from disk
+            quantize_block()
+              ├─ awq.blocks.quantizable_linears / fused_experts
+              ├─ collect()                    hooks record every Linear's input, group shared inputs
+              ├─ awq.search.search_scale()    AWQ alpha grid search per group
+              ├─ awq.blocks.fold_target() + _fold()   put 1/s into the previous norm/linear
+              ├─ awq.search.search_clip()     clip outlier weights per group
+              └─ awq.awq_linear.AwqLinear.from_float()   pack to 4-bit
+            save block-xxxxx.safetensors + progress.json   (this is the --resume checkpoint)
+       └─ save non_block.safetensors, config, tokenizer, quant_config.json
+scripts/04_verify.py, 05_eval.py → awq.model_io.load_quantized() → awq.evaluate.*
+scripts/07_export.py → awq.export.export_autoawq()      scripts/01_inspect_model.py → awq.hardware.*</pre>
+
+<h2>18.2 awq/config.py</h2>
+<p><b>Job:</b> turn <code>configs/run.yaml</code> into Python objects and refuse bad values before you pay for a GPU.</p>
+<ul>
+<li><code>QuantConfig</code>, <code>SearchConfig</code>, <code>CalibConfig</code>, <code>EvalConfig</code>, <code>IOConfig</code>, <code>RunConfig</code>: one dataclass per YAML section. Every field has a default and a comment saying what it does.</li>
+<li><code>apply_overrides()</code>: makes <code>--set quant.group_size=64</code> work. The value is parsed with YAML rules, so <code>64</code> becomes an int and <code>false</code> becomes a bool.</li>
+<li><code>validate()</code>: fails fast with the fix in the message. Examples: 4-bit only, group size must be one of 32/64/128/256/-1, float32 on CPU, n_samples divisible by batch_size.</li>
+<li>An unknown key (a typo like <code>groupsize</code>) is an error, not silently ignored.</li>
+</ul>
+
+<h2>18.3 awq/quantizer.py</h2>
+<p><b>Job:</b> the arithmetic of 4-bit numbers. It doesn't know about AWQ.</p>
+<ul>
+<li><code>compute_qparams(w)</code>: for every group of 128 weights in a row, compute <code>scale</code> and <code>zero</code>. Asymmetric uses min/max; symmetric uses max|w| with zero fixed at 8.</li>
+<li><code>quantize()</code>: <code>q = round(w/scale) + zero</code>, clamped to 0..15. <code>dequantize()</code>: <code>(q − zero)·scale</code>.</li>
+<li><code>fake_quant()</code>: quantize, then immediately dequantize. The result is still float but carries the rounding error. The search measures that error.</li>
+<li><code>pack_int4()</code> / <code>unpack_int4()</code>: two 4-bit codes per byte (even column in the low nibble, odd column in the high nibble). This is where the 4× storage saving comes from.</li>
+</ul>
+
+<h2>18.4 awq/awq_linear.py</h2>
+<ul>
+<li><code>AwqLinear</code>: stands in for <code>nn.Linear</code>. Buffers: <code>qweight</code> (packed codes), <code>scales</code>, <code>qzeros</code>, optional <code>inv_s</code>, optional bias. <code>forward(x)</code>: multiply by <code>inv_s</code> if present → dequantize → ordinary matmul. <code>from_float()</code> builds it from a Linear whose weight is already scaled and clipped.</li>
+<li><code>AwqExpertsWeight</code>: stands in for a fused MoE parameter of shape (experts, out, in). The model's own expert loop asks for <code>W[e]</code>; <code>__getitem__</code> returns expert e's dequantized matrix with <code>1/s</code> already applied to its columns. The original model code runs unchanged.</li>
+</ul>
+
+<h2>18.5 awq/blocks.py</h2>
+<ul>
+<li><code>find_blocks(model)</code>: the decoder blocks are the biggest <code>nn.ModuleList</code> whose children are all the same class. No model names are hard-coded, which is why it works on Llama, Qwen, Mixtral, DeepSeek or your own model.</li>
+<li><code>quantizable_linears(block)</code>: every <code>nn.Linear</code> in the block, minus routers, tiny layers, layers whose width isn't divisible by the group size, and your <code>skip_modules</code>.</li>
+<li><code>fused_experts(block)</code>: finds 3-D expert weights named <code>gate_up_proj</code> / <code>down_proj</code> (the transformers ≥ 5 layout).</li>
+<li><code>fold_target(block, group)</code>: answers "which earlier op can absorb 1/s?" using the table in docs/derivation.md §5. It returns None for unknown families or GQA <code>o_proj</code>; then the scale is kept inside the layer (always correct) or skipped (if you want the vLLM export).</li>
+<li><code>allow_clip()</code>: no clipping for q/k projections, same rule as the official code.</li>
+</ul>
+
+<h2>18.6 awq/model_io.py</h2>
+<ul>
+<li><code>resolve_model_path()</code>: an HF id becomes a local folder, downloading only what's needed (configs, tokenizer, weights; <code>*.py</code> only if <code>trust_remote_code</code>).</li>
+<li><code>build_skeleton()</code>: builds the model with <code>init_empty_weights()</code>, so every parameter is a zero-byte meta tensor. A 1T-parameter skeleton takes a few seconds and no memory.</li>
+<li><code>WeightStore</code>: reads one tensor at a time from safetensors shards. It handles: FP8 + <code>weight_scale_inv</code> (DeepSeek block format) → float; renamed keys (<code>block_sparse_moe</code> ↔ <code>mlp</code>); per-expert checkpoint keys stacked into the fused 3-D layout.</li>
+<li><code>ModelSource</code>: <code>load_block(i)</code> fills block i from disk onto the GPU and <code>unload_block(i)</code> turns it back into meta. If a checkpoint can't be mapped key by key, it falls back to a normal full CPU load and logs that loudly (then you need RAM ≥ model size).</li>
+<li><code>load_quantized(dir)</code>: skeleton → swap in empty <code>AwqLinear</code>s → load only packed tensors. Peak memory equals the real quantized footprint, which is why the VRAM numbers in verify/eval are honest.</li>
+</ul>
+
+<h2>18.7 awq/calib.py</h2>
+<ul>
+<li><code>get_calib_tokens()</code>: shuffle documents (seeded), tokenize, join with end-of-text tokens, cut into exactly <code>n_samples × seq_len</code>. No padding: that bug in the original guide is gone.</li>
+<li><code>get_eval_tokens()</code>: non-overlapping 2048-token windows of WikiText-2 <i>test</i>, WikiText-2 <i>validation</i> (tuning only) or C4 validation.</li>
+</ul>
+
+<h2>18.8 awq/search.py: the AWQ algorithm</h2>
+<ul>
+<li><code>search_scale(weights, x)</code>: candidate 0 is s = 1 (plain RTN). Then for α = 0, 0.05, …, 0.95: <code>s = x_mean^α / w_mean^(1−α)</code>, normalised. Error = <code>‖x·(W − Q(W·s)/s)ᵀ‖²</code>, one matmul per candidate, chunked so memory stays bounded. It returns the best s, its α, and the RTN loss for comparison (both are logged per group in <code>search_log.jsonl</code>).</li>
+<li><code>search_clip(w, x)</code>: for every (output row, group), try shrinking the max to 100%…55% and keep the clip with the lowest partial-output error. Written as a batched einsum, which made it 30× faster than the element-wise version on CPU.</li>
+<li><code>apply_clip()</code>: clamps the weights to the chosen limits.</li>
+</ul>
+
+<h2>18.9 awq/pipeline.py: the main loop</h2>
+<ul>
+<li><code>_Catcher</code>: temporarily replaces block 0, stores its inputs and keyword arguments (attention mask, rotary position embeddings), then raises to stop the forward pass. Any architecture gives us exactly what its blocks expect.</li>
+<li><code>collect()</code>: runs the FP block once. Forward hooks save each Linear's input. Linears whose input is the <i>same tensor in memory</i> form a group (q/k/v, gate/up). <code>_ExpertRecorder</code> temporarily wraps <code>F.linear</code> to catch which tokens each expert actually received.</li>
+<li><code>quantize_block()</code>: (1) search scales for all groups, (2) apply them and fold 1/s, (3) clip, (4) pack into <code>AwqLinear</code>, (5) experts per expert, (6) run the quantized block and log its relative error vs FP. It returns the next block's input (FP outputs by default, like the official code).</li>
+<li><code>quantize_model()</code>: the whole run, writing per-block checkpoints and <code>progress.json</code>; <code>resume=True</code> continues from the last finished block. <code>tests/test_pipeline.py</code> proves a crash plus resume gives byte-identical output.</li>
+</ul>
+
+<h2>18.10 awq/evaluate.py, awq/export.py, awq/hardware.py, awq/plugin.py</h2>
+<ul>
+<li><b>evaluate</b>: <code>perplexity()</code> (sum of token NLL over windows), <code>apply_rtn_()</code> (the naive baseline, applied to exactly the weights AWQ touches), <code>generations()</code>, <code>speed()</code>, <code>model_bytes()</code>, <code>run_lm_eval()</code> (passes the in-memory model to lm-evaluation-harness).</li>
+<li><b>export</b>: <code>to_gemm()</code> repacks codes into int32 words along output channels in AWQ's order [0,2,4,6,1,3,5,7]; <code>gemm_dequant()</code> is an independent reference decoder used by the tests and by <code>07_export.py</code> to prove both formats decode to the same weights.</li>
+<li><b>hardware</b>: <code>count_params()</code> counts exact parameters on the meta skeleton (tied embeddings once, experts included); <code>estimate()</code> applies the Section 4 formulas; <code>_pick()</code> chooses the cheapest GPU × count per phase (quantize = 1 GPU; serve = 1/2/4/8 for vLLM).</li>
+<li><b>plugin</b>: lets a non-transformers model go through the same pipeline via three functions (<code>load</code>, <code>blocks</code>, <code>calib_batches</code>). <code>tests/tiny_plugin.py</code> is a working template.</li>
+</ul>
+
+<h2>18.11 scripts/</h2>
+<p>Each numbered script is thin: parse <code>--config</code>/<code>--set</code>, call the library, write one JSON file, print PASS/FAIL, and exit non-zero on failure so <code>run_all.sh</code> stops at the first broken gate. Section 10 lists what each produces.</p>
+
+<h2>18.12 tests/</h2>
+<table>
+<tr><th>File</th><th>What it proves</th></tr>
+<tr><td>test_quantizer.py</td><td>pack/unpack is lossless; error ≤ half a quantization step; AwqLinear equals fake-quant math; 0.5 byte/weight storage</td></tr>
+<tr><td>test_scaling.py</td><td>the AWQ identity is exact; every fold (norm, Gemma (1+w) norm, up→down, v→o) leaves the block output unchanged to 1e-9</td></tr>
+<tr><td>test_search.py</td><td>AWQ beats RTN when salient channels exist (also on fresh data); never worse than RTN; clipping never increases error</td></tr>
+<tr><td>test_pipeline.py</td><td>end-to-end Llama (all folded), AWQ &lt; RTN error end-to-end, never-fold mode, Qwen2 GQA + tied embeddings, crash + resume = identical bytes</td></tr>
+<tr><td>test_moe.py</td><td>Mixtral fused experts are quantized per expert, reload works, output close to FP</td></tr>
+<tr><td>test_export.py</td><td>GEMM pack roundtrip, exact AWQ nibble order, GEMM decode = native decode, export refuses unfolded models</td></tr>
+<tr><td>test_plugin.py / test_hardware.py / test_config.py</td><td>custom model path; Llama-3.1-8B sizing equals the hand calculation in Section 4.3; config typing and validation</td></tr>
+</table>

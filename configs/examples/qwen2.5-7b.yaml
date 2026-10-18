@@ -1,0 +1,12 @@
+# 1x RTX 4090 / L40S. Ungated — no license click needed.
+model: Qwen/Qwen2.5-7B-Instruct
+dtype: bfloat16
+device: cuda
+quant: {w_bit: 4, group_size: 128, zero_point: true, fold_scales: auto}
+search: {n_grid: 20, clip: true}
+calib: {dataset: pileval, n_samples: 128, seq_len: 512, batch_size: 8}
+eval:
+  ppl_datasets: [wikitext2, c4]
+  ppl_seq_len: 2048
+  lm_eval_tasks: [arc_easy, arc_challenge, hellaswag, piqa, winogrande]
+io: {work_dir: /workspace/runs/qwen2.5-7b-awq}

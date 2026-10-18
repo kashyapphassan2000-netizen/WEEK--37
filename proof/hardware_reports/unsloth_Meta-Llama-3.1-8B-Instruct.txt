@@ -1,0 +1,13 @@
+MODEL      unsloth/Meta-Llama-3.1-8B-Instruct   [llama]   verdict: PASS
+PARAMS     total 8.03 B | quantizable 6.979 B (100% of block weights) | blocks 32 | dense
+SIZE       FP16 16.06 GB -> AWQ-4bit 5.73 GB  (2.8x)   checkpoint on disk 16.06 GB
+MEMORY     largest block 0.436 GB | calib activations 1.879 GB | KV@8192 1.074 GB | CPU RAM >= 16 GB | disk >= 41.8 GB
+
+PHASE           VRAM need  RENT (cheapest)            $/hr  hours*    cost*   alternatives
+A quantize         14.1 GB  1x RTX 4090                0.34    1.12    $0.48   1x L40S ($0.79), 1x A100 80GB ($1.19), 1x H100 80GB ($1.99)
+B FP16 eval        19.3 GB  1x RTX 4090                0.34    0.38    $0.16   1x L40S ($0.79), 1x A100 80GB ($1.19), 1x H100 80GB ($1.99)
+C serve AWQ         7.8 GB  1x RTX 4090                0.34     0.3    $0.13   1x L40S ($0.79), 1x A100 80GB ($1.19), 1x H100 80GB ($1.99)
+
+* ESTIMATES. Prices: https://www.runpod.io/gpu-cloud/pricing (checked 2026-10-08). Edit configs/gpus.yaml for your provider.
+
+wrote proof/hardware_reports/unsloth_Meta-Llama-3.1-8B-Instruct.json

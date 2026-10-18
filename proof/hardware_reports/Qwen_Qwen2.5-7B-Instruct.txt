@@ -1,0 +1,13 @@
+MODEL      Qwen/Qwen2.5-7B-Instruct   [qwen2]   verdict: PASS
+PARAMS     total 7.616 B | quantizable 6.525 B (100% of block weights) | blocks 28 | dense
+SIZE       FP16 15.23 GB -> AWQ-4bit 5.57 GB  (2.73x)   checkpoint on disk 15.23 GB
+MEMORY     largest block 0.466 GB | calib activations 2.483 GB | KV@8192 0.47 GB | CPU RAM >= 16 GB | disk >= 40.8 GB
+
+PHASE           VRAM need  RENT (cheapest)            $/hr  hours*    cost*   alternatives
+A quantize         17.8 GB  1x RTX 4090                0.34    1.09    $0.46   1x L40S ($0.79), 1x A100 80GB ($1.19), 1x H100 80GB ($1.99)
+B FP16 eval        18.3 GB  1x RTX 4090                0.34    0.38    $0.16   1x L40S ($0.79), 1x A100 80GB ($1.19), 1x H100 80GB ($1.99)
+C serve AWQ         7.0 GB  1x RTX 4090                0.34     0.3    $0.13   1x L40S ($0.79), 1x A100 80GB ($1.19), 1x H100 80GB ($1.99)
+
+* ESTIMATES. Prices: https://www.runpod.io/gpu-cloud/pricing (checked 2026-10-08). Edit configs/gpus.yaml for your provider.
+
+wrote proof/hardware_reports/Qwen_Qwen2.5-7B-Instruct.json

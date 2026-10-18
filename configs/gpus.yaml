@@ -1,0 +1,14 @@
+# GPU catalog used by scripts/01_inspect_model.py to pick GPU type + count + cost.
+# Prices: RunPod COMMUNITY cloud, on-demand USD per GPU-hour, read from runpod.io/gpu-cloud/pricing
+# (page dated 2026-10-08). Secure cloud is ~1.3-1.6x. Other providers: see docs/ playbook Section 6.
+# PRICES CHANGE MONTHLY — edit this file before trusting a cost estimate.
+checked: "2026-10-08"
+source: "https://www.runpod.io/gpu-cloud/pricing"
+gpus:
+  - {name: "RTX 4090",  vram_gb: 24,  usd_per_hr: 0.34, speed: 0.67}
+  - {name: "L40S",      vram_gb: 48,  usd_per_hr: 0.79, speed: 0.80}
+  - {name: "A100 80GB", vram_gb: 80,  usd_per_hr: 1.19, speed: 1.00}
+  - {name: "H100 80GB", vram_gb: 80,  usd_per_hr: 1.99, speed: 1.60}
+  - {name: "H200",      vram_gb: 141, usd_per_hr: 3.59, speed: 1.80}
+  - {name: "B200",      vram_gb: 180, usd_per_hr: 5.98, speed: 2.50}
+# speed = rough throughput relative to A100 for this pure-PyTorch pipeline (ESTIMATE).

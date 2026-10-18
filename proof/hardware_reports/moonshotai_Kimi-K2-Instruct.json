@@ -1,0 +1,110 @@
+{
+  "model": "moonshotai/Kimi-K2-Instruct",
+  "revision": "main",
+  "verdict": "PASS",
+  "reasons": [
+    "FP8 checkpoint: dequantized to 16-bit block by block while loading (supported)",
+    "FP16 baseline does not fit one 8-GPU node -> skip it (--skip-fp16) and compare against published scores"
+  ],
+  "dims": {
+    "model_type": "kimi_k2",
+    "layers": 61,
+    "hidden": 7168,
+    "intermediate": 18432,
+    "heads": 64,
+    "kv_heads": 64,
+    "head_dim": 112,
+    "vocab": 163840,
+    "tie_word_embeddings": false,
+    "experts": 384,
+    "experts_per_tok": 8,
+    "moe_intermediate": 2048,
+    "max_context": 131072,
+    "dtype": "torch.bfloat16",
+    "kv_cache_width": 576
+  },
+  "counts": {
+    "blocks_path": "?",
+    "n_blocks": 61,
+    "total_params": 1046483042304,
+    "block_params": 1044134232064,
+    "non_block_params": 2348810240,
+    "max_block_params": 17116954624,
+    "quant_linear_params": 12536774656,
+    "quant_expert_params": 1031597457408,
+    "quantizable_params": 1044134232064,
+    "n_quant_linears": null,
+    "coverage_of_blocks": 1.0,
+    "transposed_expert_modules": 0,
+    "has_nn_linear": true,
+    "estimated_from_formula": true
+  },
+  "estimate": {
+    "params_b": 1046.483,
+    "quantizable_params_b": 1044.134,
+    "fp16_gb": 2092.97,
+    "awq_gb": 547.65,
+    "compression_x": 3.82,
+    "checkpoint_gb": 1029.19,
+    "block_gb": 34.234,
+    "calib_act_gb": 2.416,
+    "kv_cache_gb": 0.576,
+    "context": 8192,
+    "disk_gb": 1596.8,
+    "cpu_ram_gb": 115.5,
+    "download_hours": 1.43,
+    "phases": {
+      "A_quantize": {
+        "vram_gb": 85.0,
+        "best": {
+          "gpu": "H200",
+          "count": 1,
+          "usd_per_hr": 3.59,
+          "speed": 1.8
+        },
+        "alternatives": [
+          {
+            "gpu": "B200",
+            "count": 1,
+            "usd_per_hr": 5.98,
+            "speed": 2.5
+          }
+        ],
+        "hours_est": 31.0,
+        "cost_usd_est": 139.11,
+        "feasible_single_node": true
+      },
+      "B_fp16_eval": {
+        "vram_gb": 2511.6,
+        "best": null,
+        "alternatives": [],
+        "hours_est": null,
+        "cost_usd_est": null,
+        "feasible_single_node": false
+      },
+      "C_serve_awq": {
+        "vram_gb": 630.5,
+        "best": {
+          "gpu": "B200",
+          "count": 4,
+          "usd_per_hr": 23.92,
+          "speed": 2.5
+        },
+        "alternatives": [
+          {
+            "gpu": "H200",
+            "count": 8,
+            "usd_per_hr": 28.72,
+            "speed": 1.8
+          }
+        ],
+        "hours_est": 0.3,
+        "cost_usd_est": 8.97,
+        "feasible_single_node": true
+      }
+    },
+    "prices_checked": "2026-10-08",
+    "price_source": "https://www.runpod.io/gpu-cloud/pricing",
+    "note": "ESTIMATES. Quantize speed constant is uncalibrated until a real GPU run; prices change monthly."
+  }
+}

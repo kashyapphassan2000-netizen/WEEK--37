@@ -1,0 +1,15 @@
+# 671B MoE, FP8 checkpoint (~700 GB download). Quantize on 1x H200/B200 with a 2-3 TB volume and
+# >= 256 GB CPU RAM. FP16 baseline is NOT practical (1.3 TB of VRAM): run 02_baseline.py --skip-fp16.
+# HONEST STATUS: this config is UNTESTED at full scale (no one has paid for that run yet). Run
+# 01_inspect_model.py first; it tells you whether the checkpoint layout streams or needs a full load.
+model: deepseek-ai/DeepSeek-V3
+dtype: bfloat16
+device: cuda
+quant: {w_bit: 4, group_size: 128, zero_point: true, fold_scales: auto, quantize_experts: true}
+search: {n_grid: 20, clip: true}
+calib: {dataset: pileval, n_samples: 128, seq_len: 512, batch_size: 4}
+eval:
+  ppl_datasets: [wikitext2]
+  ppl_seq_len: 2048
+  lm_eval_tasks: [arc_easy]
+io: {work_dir: /workspace/runs/deepseek-v3-awq}

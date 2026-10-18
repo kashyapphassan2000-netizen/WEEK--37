@@ -1,0 +1,153 @@
+{
+  "model": "unsloth/Meta-Llama-3.1-8B-Instruct",
+  "revision": "main",
+  "verdict": "PASS",
+  "reasons": [],
+  "dims": {
+    "model_type": "llama",
+    "layers": 32,
+    "hidden": 4096,
+    "intermediate": 14336,
+    "heads": 32,
+    "kv_heads": 8,
+    "head_dim": 128,
+    "vocab": 128256,
+    "tie_word_embeddings": false,
+    "experts": 0,
+    "experts_per_tok": 0,
+    "moe_intermediate": 0,
+    "max_context": 131072,
+    "dtype": "torch.bfloat16"
+  },
+  "counts": {
+    "blocks_path": "model.layers",
+    "n_blocks": 32,
+    "total_params": 8030261248,
+    "block_params": 6979584000,
+    "non_block_params": 1050677248,
+    "max_block_params": 218112000,
+    "quant_linear_params": 6979321856,
+    "quant_expert_params": 0,
+    "quantizable_params": 6979321856,
+    "n_quant_linears": 224,
+    "coverage_of_blocks": 0.999962441314554,
+    "transposed_expert_modules": 0,
+    "has_nn_linear": true
+  },
+  "estimate": {
+    "params_b": 8.03,
+    "quantizable_params_b": 6.979,
+    "fp16_gb": 16.06,
+    "awq_gb": 5.73,
+    "compression_x": 2.8,
+    "checkpoint_gb": 16.06,
+    "block_gb": 0.436,
+    "calib_act_gb": 1.879,
+    "kv_cache_gb": 1.074,
+    "context": 8192,
+    "disk_gb": 41.8,
+    "cpu_ram_gb": 16,
+    "download_hours": 0.02,
+    "phases": {
+      "A_quantize": {
+        "vram_gb": 14.1,
+        "best": {
+          "gpu": "RTX 4090",
+          "count": 1,
+          "usd_per_hr": 0.34,
+          "speed": 0.67
+        },
+        "alternatives": [
+          {
+            "gpu": "L40S",
+            "count": 1,
+            "usd_per_hr": 0.79,
+            "speed": 0.8
+          },
+          {
+            "gpu": "A100 80GB",
+            "count": 1,
+            "usd_per_hr": 1.19,
+            "speed": 1.0
+          },
+          {
+            "gpu": "H100 80GB",
+            "count": 1,
+            "usd_per_hr": 1.99,
+            "speed": 1.6
+          }
+        ],
+        "hours_est": 1.12,
+        "cost_usd_est": 0.48,
+        "feasible_single_node": true
+      },
+      "B_fp16_eval": {
+        "vram_gb": 19.3,
+        "best": {
+          "gpu": "RTX 4090",
+          "count": 1,
+          "usd_per_hr": 0.34,
+          "speed": 0.67
+        },
+        "alternatives": [
+          {
+            "gpu": "L40S",
+            "count": 1,
+            "usd_per_hr": 0.79,
+            "speed": 0.8
+          },
+          {
+            "gpu": "A100 80GB",
+            "count": 1,
+            "usd_per_hr": 1.19,
+            "speed": 1.0
+          },
+          {
+            "gpu": "H100 80GB",
+            "count": 1,
+            "usd_per_hr": 1.99,
+            "speed": 1.6
+          }
+        ],
+        "hours_est": 0.38,
+        "cost_usd_est": 0.16,
+        "feasible_single_node": true
+      },
+      "C_serve_awq": {
+        "vram_gb": 7.8,
+        "best": {
+          "gpu": "RTX 4090",
+          "count": 1,
+          "usd_per_hr": 0.34,
+          "speed": 0.67
+        },
+        "alternatives": [
+          {
+            "gpu": "L40S",
+            "count": 1,
+            "usd_per_hr": 0.79,
+            "speed": 0.8
+          },
+          {
+            "gpu": "A100 80GB",
+            "count": 1,
+            "usd_per_hr": 1.19,
+            "speed": 1.0
+          },
+          {
+            "gpu": "H100 80GB",
+            "count": 1,
+            "usd_per_hr": 1.99,
+            "speed": 1.6
+          }
+        ],
+        "hours_est": 0.3,
+        "cost_usd_est": 0.13,
+        "feasible_single_node": true
+      }
+    },
+    "prices_checked": "2026-10-08",
+    "price_source": "https://www.runpod.io/gpu-cloud/pricing",
+    "note": "ESTIMATES. Quantize speed constant is uncalibrated until a real GPU run; prices change monthly."
+  }
+}

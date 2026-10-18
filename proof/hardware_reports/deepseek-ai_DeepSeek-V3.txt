@@ -1,0 +1,15 @@
+MODEL      deepseek-ai/DeepSeek-V3   [deepseek_v3]   verdict: PASS
+           - FP8 checkpoint: dequantized to 16-bit block by block while loading (supported)
+           - FP16 baseline does not fit one 8-GPU node -> skip it (--skip-fp16) and compare against published scores
+PARAMS     total 671.026 B | quantizable 669.066 B (100% of block weights) | blocks 61 | MoE 256 experts, top-8
+SIZE       FP16 1342.05 GB -> AWQ-4bit 351.84 GB  (3.81x)   checkpoint on disk 688.59 GB
+MEMORY     largest block 23.015 GB | calib activations 2.416 GB | KV@8192 0.576 GB | CPU RAM >= 81.9 GB | disk >= 1060.4 GB
+
+PHASE           VRAM need  RENT (cheapest)            $/hr  hours*    cost*   alternatives
+A quantize         62.5 GB  1x A100 80GB               1.19   35.01   $52.07   1x H100 80GB ($1.99), 1x H200 ($3.59), 1x B200 ($5.98)
+B FP16 eval      1610.5 GB  needs > 8 GPUs of the largest type (multi-node)
+C serve AWQ       405.3 GB  8x A100 80GB               9.52     0.3    $3.57   4x H200 ($14.36), 8x H100 80GB ($15.92), 4x B200 ($23.92)
+
+* ESTIMATES. Prices: https://www.runpod.io/gpu-cloud/pricing (checked 2026-10-08). Edit configs/gpus.yaml for your provider.
+
+wrote proof/hardware_reports/deepseek-ai_DeepSeek-V3.json

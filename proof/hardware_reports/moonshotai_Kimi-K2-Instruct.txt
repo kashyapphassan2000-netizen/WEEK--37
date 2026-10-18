@@ -1,0 +1,16 @@
+[inspect] skeleton build failed (ImportError: cannot import name 'is_torch_fx_available' from 'transformers.utils.import_utils' (/home/user/WEEK--37/.venv/lib/python3.13/site-packages/transformers/utils/imp) -> formula estimate
+MODEL      moonshotai/Kimi-K2-Instruct   [kimi_k2]   verdict: PASS
+           - FP8 checkpoint: dequantized to 16-bit block by block while loading (supported)
+           - FP16 baseline does not fit one 8-GPU node -> skip it (--skip-fp16) and compare against published scores
+PARAMS     total 1046.483 B | quantizable 1044.134 B (100% of block weights) | blocks 61 | MoE 384 experts, top-8
+SIZE       FP16 2092.97 GB -> AWQ-4bit 547.65 GB  (3.82x)   checkpoint on disk 1029.19 GB
+MEMORY     largest block 34.234 GB | calib activations 2.416 GB | KV@8192 0.576 GB | CPU RAM >= 115.5 GB | disk >= 1596.8 GB
+
+PHASE           VRAM need  RENT (cheapest)            $/hr  hours*    cost*   alternatives
+A quantize         85.0 GB  1x H200                    3.59    31.0  $139.11   1x B200 ($5.98)
+B FP16 eval      2511.6 GB  needs > 8 GPUs of the largest type (multi-node)
+C serve AWQ       630.5 GB  4x B200                   23.92     0.3    $8.97   8x H200 ($28.72)
+
+* ESTIMATES. Prices: https://www.runpod.io/gpu-cloud/pricing (checked 2026-10-08). Edit configs/gpus.yaml for your provider.
+
+wrote proof/hardware_reports/moonshotai_Kimi-K2-Instruct.json

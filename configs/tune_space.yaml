@@ -1,0 +1,10 @@
+# Search space for scripts/06_tune.py — one stage at a time, winner carried forward.
+budget_trials: 8          # max quantize+eval runs
+min_improvement: 0.005    # a change must lower tune-ppl by >= 0.5% to be accepted
+patience_stages: 3        # stop after 3 stages in a row without an accepted change
+stages:
+  - {name: calibration data,  key: calib.dataset,     values: [pileval, c4, wikitext2]}
+  - {name: group size,        key: quant.group_size,  values: [128, 64]}
+  - {name: propagation,       key: search.propagate,  values: [fp, quantized]}
+  - {name: calibration size,  key: calib.n_samples,   values: [128, 256]}
+  - {name: scale placement,   key: quant.fold_scales, values: [auto, never]}

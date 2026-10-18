@@ -1,0 +1,14 @@
+# Quantize: 1x A100/H100 80GB, >= 64 GB CPU RAM, ~250 GB volume.
+# FP16 baseline: needs ~170 GB VRAM (2x H200 or 3x A100/H100) — run 02_baseline.py on a bigger pod,
+# or use --skip-fp16 and compare against published scores. GATED model.
+model: meta-llama/Llama-3.3-70B-Instruct
+dtype: bfloat16
+device: cuda
+quant: {w_bit: 4, group_size: 128, zero_point: true, fold_scales: auto}
+search: {n_grid: 20, clip: true}
+calib: {dataset: pileval, n_samples: 128, seq_len: 512, batch_size: 4}
+eval:
+  ppl_datasets: [wikitext2, c4]
+  ppl_seq_len: 2048
+  lm_eval_tasks: [arc_easy, arc_challenge, hellaswag, piqa, winogrande]
+io: {work_dir: /workspace/runs/llama-3.3-70b-awq}

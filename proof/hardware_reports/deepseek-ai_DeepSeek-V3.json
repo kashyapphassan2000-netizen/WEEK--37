@@ -1,0 +1,133 @@
+{
+  "model": "deepseek-ai/DeepSeek-V3",
+  "revision": "main",
+  "verdict": "PASS",
+  "reasons": [
+    "FP8 checkpoint: dequantized to 16-bit block by block while loading (supported)",
+    "FP16 baseline does not fit one 8-GPU node -> skip it (--skip-fp16) and compare against published scores"
+  ],
+  "dims": {
+    "model_type": "deepseek_v3",
+    "layers": 61,
+    "hidden": 7168,
+    "intermediate": 18432,
+    "heads": 128,
+    "kv_heads": 128,
+    "head_dim": 64,
+    "vocab": 129280,
+    "tie_word_embeddings": false,
+    "experts": 256,
+    "experts_per_tok": 8,
+    "moe_intermediate": 2048,
+    "max_context": 163840,
+    "dtype": "torch.bfloat16",
+    "kv_cache_width": 576
+  },
+  "counts": {
+    "blocks_path": "model.layers",
+    "n_blocks": 61,
+    "total_params": 671026404352,
+    "block_params": 669173039104,
+    "non_block_params": 1853365248,
+    "max_block_params": 11507286016,
+    "quant_linear_params": 15156838400,
+    "quant_expert_params": 653908770816,
+    "quantizable_params": 669065609216,
+    "n_quant_linears": 488,
+    "coverage_of_blocks": 0.9998394587323126,
+    "transposed_expert_modules": 0,
+    "has_nn_linear": true
+  },
+  "estimate": {
+    "params_b": 671.026,
+    "quantizable_params_b": 669.066,
+    "fp16_gb": 1342.05,
+    "awq_gb": 351.84,
+    "compression_x": 3.81,
+    "checkpoint_gb": 688.59,
+    "block_gb": 23.015,
+    "calib_act_gb": 2.416,
+    "kv_cache_gb": 0.576,
+    "context": 8192,
+    "disk_gb": 1060.4,
+    "cpu_ram_gb": 81.9,
+    "download_hours": 0.96,
+    "phases": {
+      "A_quantize": {
+        "vram_gb": 62.5,
+        "best": {
+          "gpu": "A100 80GB",
+          "count": 1,
+          "usd_per_hr": 1.19,
+          "speed": 1.0
+        },
+        "alternatives": [
+          {
+            "gpu": "H100 80GB",
+            "count": 1,
+            "usd_per_hr": 1.99,
+            "speed": 1.6
+          },
+          {
+            "gpu": "H200",
+            "count": 1,
+            "usd_per_hr": 3.59,
+            "speed": 1.8
+          },
+          {
+            "gpu": "B200",
+            "count": 1,
+            "usd_per_hr": 5.98,
+            "speed": 2.5
+          }
+        ],
+        "hours_est": 35.01,
+        "cost_usd_est": 52.07,
+        "feasible_single_node": true
+      },
+      "B_fp16_eval": {
+        "vram_gb": 1610.5,
+        "best": null,
+        "alternatives": [],
+        "hours_est": null,
+        "cost_usd_est": null,
+        "feasible_single_node": false
+      },
+      "C_serve_awq": {
+        "vram_gb": 405.3,
+        "best": {
+          "gpu": "A100 80GB",
+          "count": 8,
+          "usd_per_hr": 9.52,
+          "speed": 1.0
+        },
+        "alternatives": [
+          {
+            "gpu": "H200",
+            "count": 4,
+            "usd_per_hr": 14.36,
+            "speed": 1.8
+          },
+          {
+            "gpu": "H100 80GB",
+            "count": 8,
+            "usd_per_hr": 15.92,
+            "speed": 1.6
+          },
+          {
+            "gpu": "B200",
+            "count": 4,
+            "usd_per_hr": 23.92,
+            "speed": 2.5
+          }
+        ],
+        "hours_est": 0.3,
+        "cost_usd_est": 3.57,
+        "feasible_single_node": true
+      }
+    },
+    "prices_checked": "2026-10-08",
+    "price_source": "https://www.runpod.io/gpu-cloud/pricing",
+    "note": "ESTIMATES. Quantize speed constant is uncalibrated until a real GPU run; prices change monthly."
+  }
+}

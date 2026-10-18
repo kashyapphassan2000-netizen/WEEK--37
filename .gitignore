@@ -1,0 +1,28 @@
+# python
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+.DS_Store
+
+# secrets — never commit tokens
+.env
+*.token
+
+# heavy artifacts — never commit weights or caches
+*.safetensors
+*.bin
+*.pt
+*.pth
+*.gguf
+runs/
+hf_cache/
+checkpoints/
+wandb/
+
+# editor
+.vscode/settings.json
+.idea/

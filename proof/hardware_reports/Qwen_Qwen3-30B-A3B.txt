@@ -1,0 +1,13 @@
+MODEL      Qwen/Qwen3-30B-A3B   [qwen3_moe]   verdict: PASS
+PARAMS     total 30.532 B | quantizable 29.897 B (100% of block weights) | blocks 48 | MoE 128 experts, top-8
+SIZE       FP16 61.06 GB -> AWQ-4bit 16.82 GB  (3.63x)   checkpoint on disk 61.07 GB
+MEMORY     largest block 1.246 GB | calib activations 0.805 GB | KV@8192 0.805 GB | CPU RAM >= 16 GB | disk >= 97.9 GB
+
+PHASE           VRAM need  RENT (cheapest)            $/hr  hours*    cost*   alternatives
+A quantize          9.3 GB  1x RTX 4090                0.34    2.86    $1.22   1x L40S ($0.79), 1x A100 80GB ($1.19), 1x H100 80GB ($1.99)
+B FP16 eval        73.3 GB  4x RTX 4090                1.36    0.61    $1.03   2x L40S ($1.58), 2x A100 80GB ($2.38), 1x H200 ($3.59)
+C serve AWQ        20.3 GB  1x RTX 4090                0.34     0.3    $0.13   1x L40S ($0.79), 1x A100 80GB ($1.19), 1x H100 80GB ($1.99)
+
+* ESTIMATES. Prices: https://www.runpod.io/gpu-cloud/pricing (checked 2026-10-08). Edit configs/gpus.yaml for your provider.
+
+wrote proof/hardware_reports/Qwen_Qwen3-30B-A3B.json
